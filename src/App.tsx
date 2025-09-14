@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import UpdateElectron from '@/components/update'
-import logoVite from './assets/logo-vite.svg'
-import logoElectron from './assets/logo-electron.svg'
+import logoM from './assets/m-logo.jpg'
 import './App.css'
 
 function App() {
@@ -10,11 +9,11 @@ function App() {
     <div className='App'>
       <div className='logo-box'>
         <a href='https://github.com/electron-vite/electron-vite-react' target='_blank'>
-          <img src={logoVite} className='logo vite' alt='Electron + Vite logo' />
-          <img src={logoElectron} className='logo electron' alt='Electron + Vite logo' />
+          <img src={logoM} className='logo vite' alt='M' />
+          
         </a>
       </div>
-      <h1>Electron + Vite + React</h1>
+      <h1>Mentorae</h1>
       <div className='card'>
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
@@ -24,7 +23,7 @@ function App() {
         </p>
       </div>
       <p className='read-the-docs'>
-        Click on the Electron + Vite logo to learn more
+        Learn More
       </p>
       <div className='flex-center'>
         Place static files into the<code>/public</code> folder <img style={{ width: '5em' }} src='./node.svg' alt='Node logo' />
