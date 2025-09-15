@@ -2,6 +2,7 @@ import { useState } from 'react'
 import UpdateElectron from '@/components/update'
 import logoM from './assets/m-logo.jpg'
 import './App.css'
+import {LoginForm} from './components/auth/login-form'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -18,6 +19,7 @@ function App() {
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
+        <LoginForm/>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
