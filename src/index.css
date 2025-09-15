@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+/* 
 @layer base {
   :root {
     --sidebar-background: 0 0% 98%;
@@ -30,4 +30,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
+} */
