@@ -3,9 +3,13 @@ import { useState } from 'react'
 import UpdateElectron from '@/components/update'
 import logoM from './assets/m-logo.jpg'
 import './App.css'
-import LoginPage from '@/pages/login-page'
-import RegisterPage from '@/pages/register-page'
-import ForgotPasswordPage from '@/pages/forgot-pw-page'
+
+import LoginPage from '@/pages/auth/login-page'
+import RegisterPage from '@/pages/auth/register-page'
+import ForgotPasswordPage from '@/pages/auth/forgot-pw-page'
+
+import TutorDashboard from '@/pages/dashboard/tutor-Dash'
+import LearnerDashboard from '@/pages/dashboard/learner-Dash'
 
 function WelcomePage() {
   return (
@@ -24,6 +28,13 @@ function WelcomePage() {
         >
           Sign Up
         </Link>
+
+        <Link 
+        to="/learner-dashboard"
+        className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
+        >
+        Dashboard
+        </Link>
       </div>
     </div>
   )
@@ -33,10 +44,14 @@ function App() {
   return (
     <BrowserRouter>
     <Routes>
+
       <Route path="/" element={<WelcomePage/>} />
       <Route path="login" element={<LoginPage/>} />
       <Route path="register" element={<RegisterPage/>} />
       <Route path="forgot-pw" element={<ForgotPasswordPage/>} />
+
+      <Route path="learner-dashboard" element={<LearnerDashboard/>} />
+      <Route path="tutor-dashboard" element={<TutorDashboard/>} />
     </Routes>
     </BrowserRouter>
     // <div className='App'>
