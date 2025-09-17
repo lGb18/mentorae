@@ -33,7 +33,13 @@ function WelcomePage() {
         to="/learner-dashboard"
         className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
         >
-        Dashboard
+        Learner Dashboard
+        </Link>
+        <Link 
+        to="/Tutor-dashboard"
+        className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
+        >
+        Tutor Dashboard
         </Link>
       </div>
     </div>
