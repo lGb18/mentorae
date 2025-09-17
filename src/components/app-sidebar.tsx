@@ -25,136 +25,104 @@ import {
 const data = {
   navMain: [
     {
-      title: "Getting Started",
+      title: "Profile",
       url: "#",
       items: [
         {
-          title: "Installation",
+          title: "Dashboard",
           url: "#",
         },
         {
-          title: "Project Structure",
+          title: "Account Settings",
           url: "#",
         },
       ],
     },
     {
-      title: "Building Your Application",
+      title: "Classes",
       url: "#",
       items: [
         {
-          title: "Routing",
+          title: "Math",
           url: "#",
         },
         {
-          title: "Data Fetching",
+          title: "Science",
           url: "#",
           isActive: true,
         },
         {
-          title: "Rendering",
+          title: "English",
           url: "#",
         },
         {
-          title: "Caching",
+          title: "Filipino",
           url: "#",
         },
         {
-          title: "Styling",
+          title: "Title 1",
           url: "#",
         },
         {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
+          title: "Title 2",
           url: "#",
         },
       ],
     },
     {
-      title: "API Reference",
+      title: "Meetings",
       url: "#",
       items: [
         {
-          title: "Components",
+          title: "Schedule",
           url: "#",
         },
         {
-          title: "File Conventions",
+          title: "Join",
           url: "#",
         },
         {
-          title: "Functions",
+          title: "History",
           url: "#",
         },
         {
-          title: "next.config.js Options",
-          url: "#",
-        },
-        {
-          title: "CLI",
-          url: "#",
-        },
-        {
-          title: "Edge Runtime",
+          title: "Title 1",
           url: "#",
         },
       ],
     },
     {
-      title: "Architecture",
+      title: "Settings",
       url: "#",
       items: [
         {
-          title: "Accessibility",
+          title: "Customize",
           url: "#",
         },
         {
-          title: "Fast Refresh",
+          title: "Themes",
           url: "#",
         },
         {
-          title: "Next.js Compiler",
+          title: "Update",
           url: "#",
         },
         {
-          title: "Supported Browsers",
+          title: "About",
           url: "#",
         },
         {
-          title: "Turbopack",
+          title: "Title 1",
           url: "#",
         },
       ],
     },
     {
-      title: "Community",
+      title: "Meet and Match",
       url: "#",
       items: [
         {
-          title: "Contribution Guide",
+          title: "Find a Tutor/Tutee",
           url: "#",
         },
       ],
@@ -174,7 +142,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <GalleryVerticalEnd className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Documentation</span>
+                  <span className="font-semibold">Mentorae</span>
                   <span className="">v1.0.0</span>
                 </div>
               </a>
