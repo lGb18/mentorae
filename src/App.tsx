@@ -11,6 +11,7 @@ import ForgotPasswordPage from '@/pages/auth/forgot-pw-page'
 import TutorDashboard from '@/pages/dashboard/tutor-Dash'
 import LearnerDashboard from '@/pages/dashboard/learner-Dash'
 
+import ProfilePage from '@/pages/profile/profile'
 function WelcomePage() {
   return (
     <div className="bg-muted flex min-h-screen flex-col items-center justify-center gap-6 p-6">
@@ -36,10 +37,16 @@ function WelcomePage() {
         Learner Dashboard
         </Link>
         <Link 
-        to="/Tutor-dashboard"
+        to="/tutor-dashboard"
         className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
         >
         Tutor Dashboard
+        </Link>
+        <Link 
+        to="/my-profile"
+        className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
+        >
+        My Profile
         </Link>
       </div>
     </div>
@@ -58,6 +65,8 @@ function App() {
 
       <Route path="learner-dashboard" element={<LearnerDashboard/>} />
       <Route path="tutor-dashboard" element={<TutorDashboard/>} />
+
+      <Route path="my-profile" element={<ProfilePage/>} />
     </Routes>
     </BrowserRouter>
     // <div className='App'>

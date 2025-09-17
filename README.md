@@ -16,3 +16,6 @@ Run
 ```
 npm run dev
 ```
+
+
+Boilerplate from [electron-vite-react-saas](https://github.com/electron-vite/electron-vite-react)
