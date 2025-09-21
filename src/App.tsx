@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route, Link} from "react-router-dom"
 import { useState } from 'react'
-import UpdateElectron from '@/components/update'
-import logoM from './assets/m-logo.jpg'
 import './App.css'
 
 import LoginPage from '@/pages/auth/login-page'
@@ -29,7 +27,7 @@ function WelcomePage() {
         >
           Sign Up
         </Link>
-
+{/* 
         <Link 
         to="/learner-dashboard"
         className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
@@ -47,13 +45,13 @@ function WelcomePage() {
         className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
         >
         My Profile
-        </Link>
+        </Link> */}
       </div>
     </div>
   )
 }
 function App() {
-  const [count, setCount] = useState(0)
+
   return (
     <BrowserRouter>
     <Routes>
