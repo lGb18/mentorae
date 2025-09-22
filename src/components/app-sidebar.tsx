@@ -1,5 +1,8 @@
 import * as React from "react"
 import { GalleryVerticalEnd, Minus, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { LogOut, XCircle } from "lucide-react"
+import { supabase } from "@/lib/supabaseClient"
 
 import { SearchForm } from "@/components/search-form"
 import {
@@ -129,10 +132,19 @@ const data = {
     },
   ],
 }
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error("Error signing out:", error.message)
+    } else {
+      window.location.href = "/" // back to login/landing
+    }
+  }
+
   return (
     <Sidebar {...props}>
+      {/* Header */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -151,6 +163,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
         <SearchForm />
       </SidebarHeader>
+
+      {/* Main Nav */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
@@ -163,7 +177,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton>
-                      {item.title}{" "}
+                      {item.title}
                       <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
                       <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
                     </SidebarMenuButton>
@@ -190,6 +204,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Footer: Sign Out only */}
+      <div className="mt-auto p-3 border-t">
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={handleSignOut}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign Out
+        </Button>
+      </div>
+
       <SidebarRail />
     </Sidebar>
   )
