@@ -1,92 +1,140 @@
-// src/pages/matchmaking.tsx
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 
 export default function Matchmaking() {
-  const [status, setStatus] = useState<"idle" | "searching" | "matched" | "error">("idle")
+  const [loading, setLoading] = useState(false)
   const [match, setMatch] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [requestId, setRequestId] = useState<string | null>(null)
 
-  async function fetchProfileAndRequest() {
-    setStatus("searching")
+  const findMatch = async () => {
+    setLoading(true)
+    const user = (await supabase.auth.getUser()).data.user
+    if (!user) return
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      setStatus("error")
-      return
-    }
-
-    const { data: profile, error: profileError } = await supabase
+    const { data: p } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, role, grade_level, subjects_needed, subjects_taught")
       .eq("id", user.id)
       .single()
+    if (!p) return
+    setProfile(p)
 
-    if (profileError || !profile) {
-      setStatus("error")
-      return
-    }
+    const subjects = p.role === "student" ? p.subjects_needed : p.subjects_taught
 
-    
-    const { data: request, error: reqError } = await supabase
+    const { data: req, error } = await supabase
       .from("match_requests")
-      .insert([
-        {
-          user_id: profile.id,
-          role: profile.role,
-          subjects: profile.role === "student" ? profile.subjects_needed : profile.subjects_taught,
-          grade_level: profile.grade_level,
-        },
-      ])
+      .insert({
+        user_id: p.id,
+        role: p.role,
+        subjects,
+        grade_level: p.grade_level,
+      })
       .select()
       .single()
+    if (error) { console.error(error); setLoading(false); return }
 
-    if (reqError) {
-      console.error(reqError)
-      setStatus("error")
-      return
-    }
+    setRequestId(req.id)
 
-    
-    pollForMatch(request.id)
-  }
-
-    async function pollForMatch(profileId: string) {
-    const { data, error } = await supabase
+    const interval = setInterval(async () => {
+      const { data: matchData } = await supabase
         .from("matches")
         .select("*")
-        .or(`student_id.eq.${profileId},tutor_id.eq.${profileId}`)
+        .or(`student_id.eq.${p.id},tutor_id.eq.${p.id}`)
+        .order("created_at", { ascending: false })
+        .limit(1)
 
-    if (error) {
-        console.error("Error polling match:", error.message)
-        return null
+      if (matchData && matchData.length > 0) {
+        setMatch(matchData[0])
+        clearInterval(interval)
+        setLoading(false)
+      }
+    }, 3000)
+  }
+
+  const cancelMatch = async () => {
+    if (requestId) {
+      await supabase.from("match_requests").update({ status: "cancelled" }).eq("id", requestId)
+      setRequestId(null)
     }
-
-    return data
+    if (match) {
+      await supabase.from("matches").update({ status: "cancelled" }).eq("id", match.id)
+      setMatch(null)
     }
+    setLoading(false)
+  }
 
+  const acceptMatch = async () => {
+    if (!match || !profile) return
+
+    const update = profile.role === "student" 
+      ? { student_confirmed: true } 
+      : { tutor_confirmed: true }
+
+    const { data, error } = await supabase
+      .from("matches")
+      .update(update)
+      .eq("id", match.id)
+      .select()
+      .single()
+    if (error) console.error(error)
+    else setMatch(data)
+  }
+
+  const isConfirmed = match?.student_confirmed && match?.tutor_confirmed
 
   return (
-    <main className="flex flex-col items-center justify-center p-8">
-      {status === "idle" && (
+    <div className="flex flex-col items-center gap-4 p-6">
+      {!loading && !match && (
         <button
-          onClick={fetchProfileAndRequest}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-500"
+          onClick={findMatch}
+          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
           Find a Match
         </button>
       )}
 
-      {status === "searching" && <p>🔍 Searching for a match...</p>}
-
-      {status === "matched" && match && (
-        <div className="p-4 border rounded bg-green-100">
-          <h2 className="font-bold">✅ Match Found!</h2>
-          <p>Session ID: {match.id}</p>
-          {/* Later: add "Join Session" button → video/chat page */}
+      {loading && !match && (
+        <div className="flex flex-col items-center gap-2">
+          <p>Searching for a match...</p>
+          <button
+            onClick={cancelMatch}
+            className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+          >
+            Cancel
+          </button>
         </div>
       )}
 
-      {status === "error" && <p className="text-red-500">❌ Something went wrong.</p>}
-    </main>
+      {match && (
+        <div className="rounded border p-4 shadow w-full max-w-md">
+          <h2 className="font-bold">Match Found!</h2>
+          <p>Subject: {match.subject}</p>
+          <p>Grade Level: {match.grade_level}</p>
+          <p>Status: {match.status}</p>
+
+          {!isConfirmed ? (
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={acceptMatch}
+                className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+              >
+                Accept
+              </button>
+              <button
+                onClick={cancelMatch}
+                className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <p className="mt-2 text-green-600 font-semibold">
+              ✅ Match confirmed!
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
