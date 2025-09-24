@@ -10,6 +10,8 @@ import TutorDashboard from '@/pages/dashboard/tutor-Dash'
 import LearnerDashboard from '@/pages/dashboard/learner-Dash'
 
 import ProfilePage from '@/pages/profile/profile'
+import Matchmaking from '@/pages/matchmaking'
+
 function WelcomePage() {
   return (
     <div className="bg-muted flex min-h-screen flex-col items-center justify-center gap-6 p-6">
@@ -65,6 +67,7 @@ function App() {
       <Route path="tutor-dashboard" element={<TutorDashboard/>} />
 
       <Route path="my-profile" element={<ProfilePage/>} />
+      <Route path="matchmaking" element={<Matchmaking/>} />
     </Routes>
     </BrowserRouter>
     // <div className='App'>

@@ -3,6 +3,7 @@ import { GalleryVerticalEnd, Minus, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LogOut, XCircle } from "lucide-react"
 import { supabase } from "@/lib/supabaseClient"
+import { Link } from "react-router-dom"
 
 import { SearchForm } from "@/components/search-form"
 import {
@@ -122,11 +123,11 @@ const data = {
     },
     {
       title: "Meet and Match",
-      url: "#",
+      url: "/matchmaking",
       items: [
         {
           title: "Find a Tutor/Tutee",
-          url: "#",
+          url: "/matchmaking",
         },
       ],
     },
@@ -191,7 +192,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               asChild
                               isActive={item.isActive}
                             >
-                              <a href={item.url}>{item.title}</a>
+                              <Link
+                                to={item.url}
+                                className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
+                              >
+                                {item.title}
+                            </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
