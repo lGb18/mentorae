@@ -11,8 +11,9 @@ import LearnerDashboard from '@/pages/dashboard/learner-Dash'
 
 import ProfilePage from '@/pages/profile/profile'
 import Matchmaking from '@/pages/matchmaking'
-
+import ChatPage from '@/components/chats/chatpage'
 import CoursePage from './components/course-page'
+
 function WelcomePage() {
   return (
     <div className="bg-muted flex min-h-screen flex-col items-center justify-center gap-6 p-6">
@@ -53,7 +54,7 @@ function WelcomePage() {
     </div>
   )
 }
-function App() {
+function App({ currentUserId }: { currentUserId: string }) {
 
   return (
     <BrowserRouter>
@@ -69,6 +70,7 @@ function App() {
 
       <Route path="my-profile" element={<ProfilePage/>} />
       <Route path="matchmaking" element={<Matchmaking/>} />
+      <Route path="learner-dashboard/chats" element={<ChatPage currentUserId={currentUserId} />} />
       {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
     </Routes>
     </BrowserRouter>

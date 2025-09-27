@@ -91,7 +91,7 @@ const data = {
         },
         {
           title: "Title 1",
-          url: "#",
+          url: "learner-dashboard/chats",
         },
       ],
     },
