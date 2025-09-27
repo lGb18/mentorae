@@ -44,7 +44,7 @@ const data = {
     },
     {
       title: "Classes",
-      url: "#",
+      url: "course-page",
       items: [
         {
           title: "Math",

@@ -1,29 +1,105 @@
-import { useParams } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useParams, Link } from "react-router-dom"
+import { supabase } from "../lib/supabaseClient"
+import SubjectEditor from "./subject-editor"
+import SubjectViewer from "./subject-viewer"
 
-interface CoursePageProps {
+type Course = {
+  id: string
+  title: string
+  description: string
+  teacher_id: string
+}
+
+type Profile = {
+  id: string
+  email: string
+  role: "student" | "teacher"
+  display_name: string
+}
+
+type CoursePageProps = {
   subject: string
 }
 
 export default function CoursePage({ subject }: CoursePageProps) {
- 
-  const gradeLevel = "Grade 8"
+  const { id: courseId } = useParams<{ id: string }>()
+  const [course, setCourse] = useState<Course | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  
-  const hasContent = false
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true)
+      try {
+        // get session user
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (session?.user) {
+          const { data: profileData, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single()
+
+          if (error) throw error
+          setProfile(profileData)
+        } else {
+          setProfile(null)
+        }
+
+        // get course
+        const { data: courseData, error: courseError } = await supabase
+          .from("courses")
+          .select("*")
+          .eq("id", courseId)
+          .single()
+
+        if (courseError) throw courseError
+        setCourse(courseData)
+      } catch (err) {
+        console.error("Error loading course:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [courseId])
+
+  if (loading) return <p>Loading...</p>
+  if (!course) return <p>Course not found</p>
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">{subject} - {gradeLevel}</h1>
-      
-      {hasContent ? (
-        <div>
-          {/* later: render fetched Quill content */}
-          <p>subject content…</p>
-        </div>
+    <div>
+      <h1>{course.title}</h1>
+      <p>{course.description}</p>
+
+      {profile ? (
+        profile.role === "teacher" && profile.id === course.teacher_id ? (
+          <>
+            <p>Welcome, {profile.display_name} (Teacher)</p>
+            <SubjectEditor
+              subjectId={subject}
+              gradeLevel="default" // 🔹 placeholder until grade logic is added
+              tutorId={profile.id}
+            />
+          </>
+        ) : (
+          <>
+            <p>Welcome, {profile.display_name} (Student)</p>
+            <SubjectViewer
+              subjectId={subject}
+              gradeLevel="default" // 🔹 same placeholder
+            />
+          </>
+        )
       ) : (
-        <div className="text-gray-500 italic">
-          No content available for this subject yet.
-        </div>
+        <p>
+          <Link to="/login">Login</Link> to access this course
+        </p>
       )}
     </div>
   )

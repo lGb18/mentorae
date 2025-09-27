@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-
+import "react-quill/dist/quill.snow.css";
 import './index.css'
 
 import './demos/ipc'
