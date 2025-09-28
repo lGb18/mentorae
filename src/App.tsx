@@ -13,7 +13,7 @@ import ProfilePage from '@/pages/profile/profile'
 import Matchmaking from '@/pages/matchmaking'
 import ChatPage from '@/components/chats/chatpage'
 import CoursePage from './components/course-page'
-
+import VideoChatWrapper from './pages/videochatWrapper'
 function WelcomePage() {
   return (
     <div className="bg-muted flex min-h-screen flex-col items-center justify-center gap-6 p-6">
@@ -70,8 +70,9 @@ function App({ currentUserId }: { currentUserId: string }) {
 
       <Route path="my-profile" element={<ProfilePage/>} />
       <Route path="matchmaking" element={<Matchmaking/>} />
-      <Route path="learner-dashboard/chats" element={<ChatPage currentUserId={currentUserId} />} />
+      <Route path="/chats" element={<ChatPage currentUserId={currentUserId} />} />
       {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
+      <Route path="/video/:matchId" element={<VideoChatWrapper />} />
     </Routes>
     </BrowserRouter>
     // <div className='App'>

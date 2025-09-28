@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
+import { useNavigate } from "react-router-dom"
 
 export default function Matchmaking() {
   const [loading, setLoading] = useState(false)
   const [match, setMatch] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const findMatch = async () => {
     setLoading(true)
@@ -83,6 +85,16 @@ export default function Matchmaking() {
 
   const isConfirmed = match?.student_confirmed && match?.tutor_confirmed
 
+  //  Auto-redirect once both confirm
+  useEffect(() => {
+    if (isConfirmed && match) {
+      const timer = setTimeout(() => {
+        navigate(`/video/${match.id}`)
+      }, 3000) // wait 3s to show message first
+      return () => clearTimeout(timer)
+    }
+  }, [isConfirmed, match, navigate])
+
   return (
     <div className="flex flex-col items-center gap-4 p-6">
       {!loading && !match && (
@@ -130,7 +142,7 @@ export default function Matchmaking() {
             </div>
           ) : (
             <p className="mt-2 text-green-600 font-semibold">
-              ✅ Match confirmed!
+              ✅ Match confirmed! Redirecting to meeting...
             </p>
           )}
         </div>

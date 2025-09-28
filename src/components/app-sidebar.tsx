@@ -83,7 +83,7 @@ const data = {
         },
         {
           title: "Join",
-          url: "#",
+          url: "/video",
         },
         {
           title: "History",
