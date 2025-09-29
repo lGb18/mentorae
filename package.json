@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "dist-electron/main/index.js",
   "description": "An Academic Tutoring and Peer Support Hub",
-  "author": "lGb18",
+  "author": {
+      "name": "lGb18",
+      "email": "levibarroga18@gmail.com"
+  },
   "license": "MIT",
   "private": true,
   "debug": {
