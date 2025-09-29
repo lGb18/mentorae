@@ -1,9 +1,9 @@
 {
-  "name": "electron-vite-react",
-  "version": "2.2.0",
+  "name": "mentorae",
+  "version": "1.0.0",
   "main": "dist-electron/main/index.js",
-  "description": "Electron Vite React boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "description": "An Academic Tutoring and Peer Support Hub",
+  "author": "lGb18",
   "license": "MIT",
   "private": true,
   "debug": {
@@ -17,7 +17,8 @@
     "build": "tsc && vite build && electron-builder",
     "preview": "vite preview",
     "pretest": "vite build --mode=test",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dist": "electron-builder"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -48,7 +49,8 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
-    "electron": "^38.1.0",
+    "builder": "^5.0.0",
+    "electron": "^38.2.0",
     "electron-builder": "^24.13.3",
     "postcss": "^8.4.49",
     "postcss-import": "^16.1.0",
@@ -60,5 +62,25 @@
     "vite-plugin-electron": "^0.29.0",
     "vite-plugin-electron-renderer": "^0.14.6",
     "vitest": "^3.2.4"
+  },
+  "build": {
+    "appId": "com.mentorae.tutorapp",
+    "productName": "Mentorae",
+    "files": [
+      "dist/**",
+      "dist-electron/**"
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": ["dmg", "zip"]
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Education"
+    },
+     "win": {
+    "target": ["nsis", "zip"],
+    "publisherName": "lGb18"
+  }
   }
 }
