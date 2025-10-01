@@ -18,7 +18,7 @@
  "scripts": {
   "dev": "vite",
   "build:renderer": "vite build",
-  "build:main": "tsc -p electron/tsconfig.json",
+  "build:main": "vite build --mode=production",
   "build": "npm run build:main && npm run build:renderer",
   "preview": "vite preview",
   "pretest": "vite build --mode=test",
