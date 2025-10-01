@@ -71,6 +71,7 @@
     "vitest": "^3.2.4"
   },
   "build": {
+    "publish  ": null,
     "appId": "com.mentorae.tutorapp",
     "productName": "Mentorae",
     "files": [

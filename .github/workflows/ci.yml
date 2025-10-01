@@ -80,31 +80,35 @@ jobs:
       - name: Lint markdown
         run: npx markdownlint-cli ${{ needs.job1.outputs.markdown_files }} --ignore node_modules
 
-  job3:
-    name: Build and Upload Electron App
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+job3:
+  name: Build and Upload Electron App
+  runs-on: ${{ matrix.os }}
+  strategy:
+    matrix:
+      os: [ubuntu-latest, macos-latest, windows-latest]
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Install Dependencies
-        run: npm ci
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
 
-      - name: Build Electron App
-        run: npm run dist
+    - name: Install Dependencies
+      run: npm ci
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: electron-installers
-          path: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.AppImage
-            dist/*.deb
-            dist/*.zip  
+    - name: Build Electron App
+      run: npx electron-builder --publish never
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: electron-installers-${{ matrix.os }}
+        path: |
+          dist/*.exe
+          dist/*.dmg
+          dist/*.AppImage
+          dist/*.deb
+          dist/*.zip
