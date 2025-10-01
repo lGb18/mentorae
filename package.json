@@ -22,7 +22,9 @@
     "build": "tsc && npm run build:main && npm run build:renderer && electron-builder",
     "preview": "vite preview",
     "pretest": "vite build --mode=test",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dist": "electron-builder"
+
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
