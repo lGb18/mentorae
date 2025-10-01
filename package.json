@@ -17,11 +17,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder",
+    "build:renderer": "vite build",
+    "build:main": "vite build --mode=production", 
+    "build": "tsc && npm run build:main && npm run build:renderer && electron-builder",
     "preview": "vite preview",
     "pretest": "vite build --mode=test",
-    "test": "vitest run",
-    "dist": "electron-builder"
+    "test": "vitest run"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -71,8 +72,13 @@
     "productName": "Mentorae",
     "files": [
       "dist/**",
-      "dist-electron/**"
+      "dist-electron/**",
+      "electron/**/*.js",
+      "electron/**/*.ts"
     ],
+    "directories": {
+    "buildResources": "assets"
+    },
     "mac": {
       "category": "public.app-category.education",
       "target": ["dmg", "zip"]
@@ -82,8 +88,10 @@
       "category": "Education"
     },
      "win": {
-    "target": ["nsis", "zip"],
-    "publisherName": "lGb18"
+      "forceCodeSigning": false,
+      "certificateFile": null,
+      "target": ["nsis", "zip"]
+      
   }
   }
 }
