@@ -81,29 +81,30 @@ jobs:
         run: npx markdownlint-cli ${{ needs.job1.outputs.markdown_files }} --ignore node_modules
 
   job3:
-    name: Build Cross-Platform Installers
+    name: Build and Upload Electron App
     runs-on: ubuntu-latest
-    needs: job1
-    if: ${{ github.event_name == 'pull_request_target' && github.base_ref == 'main' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Build installers
+      - name: Build Electron App
         run: npm run dist
 
-      - name: Upload artifacts
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: installers
-          path: dist/*
+          name: electron-installers
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.zip  
