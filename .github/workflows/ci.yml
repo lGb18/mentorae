@@ -100,8 +100,7 @@ job3:
       run: npm ci
 
     - name: Build Electron App
-      run: npx electron-builder --publish never
-
+      run: npx electron-builder --config.extraMetadata.version=$GITHUB_SHA --publish never
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
