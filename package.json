@@ -15,15 +15,16 @@
     }
   },
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build:renderer": "vite build",
-    "build:main": "vite build --mode=production", 
-    "build": "tsc && npm run build:main && npm run build:renderer && electron-builder",
-    "preview": "vite preview",
-    "pretest": "vite build --mode=test",
-    "test": "vitest run",
-    "dist": "electron-builder"
+ "scripts": {
+  "dev": "vite",
+  "build:renderer": "vite build",
+  "build:main": "tsc -p electron/tsconfig.json",
+  "build": "npm run build:main && npm run build:renderer",
+  "preview": "vite preview",
+  "pretest": "vite build --mode=test",
+  "test": "vitest run",
+  "dist": "npm run build && electron-builder"
+
 
   },
   "dependencies": {
