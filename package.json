@@ -19,7 +19,7 @@
   "dev": "vite",
   "build:renderer": "vite build",
   "build:main": "vite build --mode=production",
-  "build": "npm run build:main && npm run build:renderer",
+  "build": "tsc && npm run build:main && npm run build:renderer && electron-builder --publish never",
   "preview": "vite preview",
   "pretest": "vite build --mode=test",
   "test": "vitest run",
@@ -83,6 +83,7 @@
     "buildResources": "assets"
     },
     "mac": {
+      "forceCodeSigning": false,
       "category": "public.app-category.education",
       "target": ["dmg", "zip"]
     },
