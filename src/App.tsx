@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link} from "react-router-dom"
+import { HashRouter, Routes, Route, Link} from "react-router-dom"
 import { useState } from 'react'
 import './App.css'
 
@@ -57,7 +57,7 @@ function WelcomePage() {
 function App({ currentUserId }: { currentUserId: string }) {
 
   return (
-    <BrowserRouter>
+    <HashRouter>
     <Routes>
 
       <Route path="/" element={<WelcomePage/>} />
@@ -74,7 +74,7 @@ function App({ currentUserId }: { currentUserId: string }) {
       {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
       <Route path="/video/:matchId" element={<VideoChatWrapper />} />
     </Routes>
-    </BrowserRouter>
+    </HashRouter>
     // <div className='App'>
     //   <div className='logo-box'>
     //     <a href='https://github.com/electron-vite/electron-vite-react' target='_blank'>
