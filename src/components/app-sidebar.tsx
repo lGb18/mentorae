@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/sidebar"
 
 // This is sample data.
-const data = {
+let data = {
   navMain: [
     {
       title: "Profile",
@@ -48,7 +48,7 @@ const data = {
       items: [
         {
           title: "Math",
-          url: "#",
+          url: "/tutor-dashboard/courses/math/:id",
         },
         {
           title: "Science",

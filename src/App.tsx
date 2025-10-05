@@ -14,6 +14,8 @@ import Matchmaking from '@/pages/matchmaking'
 import ChatPage from '@/components/chats/chatpage'
 import CoursePage from './components/course-page'
 import VideoChatWrapper from './pages/videochatWrapper'
+
+import MathSubject from '@/pages/courses/math'
 function WelcomePage() {
   return (
     <div className="bg-muted flex min-h-screen flex-col items-center justify-center gap-6 p-6">
@@ -72,7 +74,14 @@ function App({ currentUserId }: { currentUserId: string }) {
       <Route path="matchmaking" element={<Matchmaking/>} />
       <Route path="/chats" element={<ChatPage currentUserId={currentUserId} />} />
       {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
-      <Route path="/video/:matchId" element={<VideoChatWrapper />} />
+      
+      <Route path="/tutor-dashboard/courses/math/:id" element={<CoursePage subject="math" />} />
+      <Route path="/tutor-dashboard/courses/science/:id" element={<CoursePage subject="science" />} />
+      <Route path="/tutor-dashboard/courses/english/:id" element={<CoursePage subject="english" />} />
+      <Route path="/tutor-dashboard/courses/filipino/:id" element={<CoursePage subject="filipino" />} />
+
+
+
     </Routes>
     </HashRouter>
     // <div className='App'>

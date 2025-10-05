@@ -134,7 +134,7 @@ export default function Matchmaking() {
     setLoading(false)
   }
 
-  // ✅ ACCEPT MATCH
+  //  ACCEPT MATCH
   const acceptMatch = async () => {
     if (!match || !profile) return
 
