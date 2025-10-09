@@ -71,11 +71,12 @@ export default function Matchmaking() {
       .select("*")
       .eq("status", "searching")
       .eq("role", p.role === "student" ? "teacher" : "student")
-      .ilike('subjects', `%${payload.subjects[0]}%`)
+        .contains("subjects", [payload.subjects[0]]) // <-- safer array match
+      // .ilike('subjects', `%${payload.subjects[0]}%`)
       .limit(1)
       .single()
 
-    // If found, create a match
+    //If found, create a match
     if (existing) {
       const subject =
         Array.isArray(subjects) && subjects.length > 0 ? subjects[0] : "General"
@@ -112,6 +113,8 @@ export default function Matchmaking() {
         clearInterval(interval)
         setLoading(false)
       }
+      console.log("Polling matches for user:", p.id, "→ found:", matchData)
+
     }, 3000)
   }
 
@@ -154,7 +157,23 @@ export default function Matchmaking() {
   }
 
   const isConfirmed = match?.student_confirmed && match?.tutor_confirmed
-
+    useEffect(() => {
+    if (!match?.id) return
+    const channel = supabase
+      .channel(`match-updates-${match.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` },
+        (payload) => {
+          const updated = payload.new
+          setMatch(updated)
+        }
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [match?.id])
   // 🔁 AUTO-REDIRECT WHEN CONFIRMED
   useEffect(() => {
     if (isConfirmed && match) {

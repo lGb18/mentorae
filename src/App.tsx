@@ -74,7 +74,7 @@ function App({ currentUserId }: { currentUserId: string }) {
       <Route path="matchmaking" element={<Matchmaking/>} />
       <Route path="/chats" element={<ChatPage currentUserId={currentUserId} />} />
       {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
-      
+      <Route path="/video/:matchId" element={<VideoChatWrapper />} /> 
       <Route path="/tutor-dashboard/courses/math/:id" element={<CoursePage subject="math" />} />
       <Route path="/tutor-dashboard/courses/science/:id" element={<CoursePage subject="science" />} />
       <Route path="/tutor-dashboard/courses/english/:id" element={<CoursePage subject="english" />} />
