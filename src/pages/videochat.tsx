@@ -4,8 +4,8 @@ import { supabase } from "@/lib/supabaseClient";
 
 type Match = {
   id: string;
-  tutorId: string;
-  studentId: string;
+  tutor_id: string;
+  student_id: string;
 };
 
 type User = {
@@ -75,7 +75,7 @@ export default function VideoChat({ match, user }: VideoChatProps) {
       if (!match || !user) return;
 
       // decide who is the "other" user
-      const otherId = user.id === match.tutorId ? match.studentId : match.tutorId;
+      const otherId = user.id === match.tutor_id ? match.student_id : match.tutor_id;
       if (!otherId) return;
 
       const { data } = await supabase

@@ -5,8 +5,8 @@ import VideoChat from "./videochat";
 
 type Match = {
   id: string;
-  tutorId: string;
-  studentId: string;
+  tutor_id: string;
+  student_id: string;
 };
 
 export default function VideoChatWrapper() {
@@ -29,7 +29,7 @@ export default function VideoChatWrapper() {
       if (!matchId) return;
       const { data } = await supabase
         .from("matches")
-        .select("id, tutorId, studentId")
+        .select("id, tutor_id, student_id")
         .eq("id", matchId)
         .single();
       if (data) setMatch(data);
