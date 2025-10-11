@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Peer, { MediaConnection } from "peerjs";
+import Peer from "peerjs";
 import { supabase } from "@/lib/supabaseClient";
 
 type Match = {
@@ -21,7 +21,7 @@ export default function VideoChat({ match, user }: VideoChatProps) {
   const [peerId, setPeerId] = useState("");
   const [remotePeerId, setRemotePeerId] = useState("");
   const [peer, setPeer] = useState<Peer | null>(null);
-  const [inCall, setInCall] = useState(false); 
+  const [inCall, setInCall] = useState(false);
   const myVideo = useRef<HTMLVideoElement | null>(null);
   const remoteVideo = useRef<HTMLVideoElement | null>(null);
 
@@ -40,55 +40,70 @@ export default function VideoChat({ match, user }: VideoChatProps) {
     }
   }
 
-  // 1. Init PeerJS + save my Peer ID in Supabase
+  // 1. Init PeerJS + reuse/save Peer ID in Supabase
   useEffect(() => {
     if (!user) return;
 
-    // small delay avoids "WebSocket closed before connection" in Electron
     const timer = setTimeout(() => {
-      const newPeer = new Peer(user.id, {
-        host: "0.peerjs.com",
-        secure: true,
-        port: 443,
-        config: {
-          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-        },
-      });
+      (async () => {
+        // ✅ Fetch or reuse peer_id for this user
+        const { data } = await supabase
+          .from("profiles")
+          .select("peer_id")
+          .eq("id", user.id)
+          .single();
 
-      setPeer(newPeer);
+        // ✅ Reuse existing peer_id if available, otherwise generate new one
+        const currentPeerId =
+          data?.peer_id || `${user.id}-${crypto.randomUUID().slice(0, 6)}`;
 
-      newPeer.on("open", async (id: string) => {
-        console.log("My PeerJS ID:", id);
-        await supabase.from("profiles").update({ peer_id: id }).eq("id", user.id);
-      });
+        const newPeer = new Peer(currentPeerId, {
+          host: "0.peerjs.com",
+          secure: true,
+          port: 443,
+          config: {
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+          },
+        });
 
-      newPeer.on("error", (err) => {
-        console.warn("PeerJS error:", err.type, err);
-      });
+        setPeer(newPeer);
+        setPeerId(currentPeerId);
 
-      newPeer.on("call", async (call) => {
-        try {
-          const stream = await safeGetUserMedia();
-          call.answer(stream);
-          setInCall(true);
+        newPeer.on("open", async (id: string) => {
+          console.log("My PeerJS ID:", id);
+          // Only update if missing or changed
+          if (!data?.peer_id || data.peer_id !== id) {
+            await supabase.from("profiles").update({ peer_id: id }).eq("id", user.id);
+          }
+        });
 
-          call.on("stream", (remoteStream) => {
-            if (remoteVideo.current) {
-              remoteVideo.current.srcObject = remoteStream;
-              try {
-                remoteVideo.current.play();
-              } catch {}
-            }
-          });
-        } catch {
-          console.warn("No camera/mic found — continuing without media.");
-        }
-      });
+        newPeer.on("error", (err) => {
+          console.warn("PeerJS error:", err.type, err);
+        });
+
+        newPeer.on("call", async (call) => {
+          try {
+            const stream = await safeGetUserMedia();
+            call.answer(stream);
+            setInCall(true);
+
+            call.on("stream", (remoteStream) => {
+              if (remoteVideo.current) {
+                remoteVideo.current.srcObject = remoteStream;
+                try {
+                  remoteVideo.current.play();
+                } catch {}
+              }
+            });
+          } catch {
+            console.warn("No camera/mic found — continuing without media.");
+          }
+        });
+      })();
     }, 800);
 
     return () => clearTimeout(timer);
   }, [user]);
-
 
   // 2. Get remote peer_id once matchmaking is ready
   useEffect(() => {
@@ -134,7 +149,7 @@ export default function VideoChat({ match, user }: VideoChatProps) {
     }
   };
 
-    return (
+  return (
     <div>
       <h2>Video Chat Demo</h2>
       <p>My Peer ID: {peerId}</p>
@@ -180,5 +195,4 @@ export default function VideoChat({ match, user }: VideoChatProps) {
       )}
     </div>
   );
-
 }
