@@ -83,7 +83,7 @@ let data = {
         },
         {
           title: "Join",
-          url: "/video",
+          url: "/videochat-wrapper",
         },
         {
           title: "History",

@@ -13,31 +13,33 @@ export default function VideoChatWrapper() {
   const { matchId } = useParams<{ matchId: string }>();
   const [match, setMatch] = useState<Match | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // fetch logged in user
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-    fetchUser();
-  }, []);
+    const loadData = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return setLoading(false);
 
-  // fetch match details
-  useEffect(() => {
-    const fetchMatch = async () => {
-      if (!matchId) return;
-      const { data } = await supabase
+      const { data: matchData } = await supabase
         .from("matches")
         .select("id, tutor_id, student_id")
         .eq("id", matchId)
         .single();
-      if (data) setMatch(data);
+
+      if (matchData) setMatch(matchData);
+      setUser(userData.user);
+      setLoading(false);
     };
-    fetchMatch();
+    loadData();
   }, [matchId]);
 
-  if (!match || !user) return <p>Loading video chat...</p>;
+  if (loading) return <p>Loading video chat...</p>;
+  if (!match || !user) return <p>Unable to load video chat.</p>;
 
-  return <VideoChat match={match} user={user} />;
+  return (
+    <div style={{ padding: "10px" }}>
+      <h1>Video Conference</h1>
+      <VideoChat match={match} user={user} />
+    </div>
+  );
 }

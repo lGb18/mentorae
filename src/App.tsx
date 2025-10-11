@@ -15,6 +15,7 @@ import ChatPage from '@/components/chats/chatpage'
 import CoursePage from './components/course-page'
 import VideoChatWrapper from './pages/videochatWrapper'
 
+import VideoCallPage from './pages/videoconference-page'
 import MathSubject from '@/pages/courses/math'
 function WelcomePage() {
   return (
@@ -79,6 +80,9 @@ function App({ currentUserId }: { currentUserId: string }) {
       <Route path="/tutor-dashboard/courses/science/:id" element={<CoursePage subject="science" />} />
       <Route path="/tutor-dashboard/courses/english/:id" element={<CoursePage subject="english" />} />
       <Route path="/tutor-dashboard/courses/filipino/:id" element={<CoursePage subject="filipino" />} />
+
+      <Route path="/videochat-wrapper" element={< VideoChatWrapper/>} />
+
 
 
 
