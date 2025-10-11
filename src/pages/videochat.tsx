@@ -44,39 +44,51 @@ export default function VideoChat({ match, user }: VideoChatProps) {
   useEffect(() => {
     if (!user) return;
 
-    const newPeer = new Peer(); // PeerJS Cloud
-    setPeer(newPeer);
+    // small delay avoids "WebSocket closed before connection" in Electron
+    const timer = setTimeout(() => {
+      const newPeer = new Peer(user.id, {
+        host: "0.peerjs.com",
+        secure: true,
+        port: 443,
+        config: {
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        },
+      });
 
-    newPeer.on("open", async (id: string) => {
-      setPeerId(id);
-      console.log("My PeerJS ID:", id);
+      setPeer(newPeer);
 
-      if (user?.id) {
+      newPeer.on("open", async (id: string) => {
+        console.log("My PeerJS ID:", id);
         await supabase.from("profiles").update({ peer_id: id }).eq("id", user.id);
-      }
-    });
+      });
 
-    // Auto-answer incoming calls
-    newPeer.on("call", async (call: MediaConnection) => {
-      const stream = await safeGetUserMedia();
+      newPeer.on("error", (err) => {
+        console.warn("PeerJS error:", err.type, err);
+      });
 
-      if (myVideo.current) {
-        myVideo.current.srcObject = stream;
-        myVideo.current.play();
-      }
+      newPeer.on("call", async (call) => {
+        try {
+          const stream = await safeGetUserMedia();
+          call.answer(stream);
+          setInCall(true);
 
-      call.answer(stream);
-      setInCall(true);
-      call.on("stream", (remoteStream: MediaStream) => {
-        if (remoteVideo.current) {
-          remoteVideo.current.srcObject = remoteStream;
-          remoteVideo.current.play();
+          call.on("stream", (remoteStream) => {
+            if (remoteVideo.current) {
+              remoteVideo.current.srcObject = remoteStream;
+              try {
+                remoteVideo.current.play();
+              } catch {}
+            }
+          });
+        } catch {
+          console.warn("No camera/mic found — continuing without media.");
         }
       });
-    });
+    }, 800);
 
-    return () => newPeer.destroy();
+    return () => clearTimeout(timer);
   }, [user]);
+
 
   // 2. Get remote peer_id once matchmaking is ready
   useEffect(() => {
