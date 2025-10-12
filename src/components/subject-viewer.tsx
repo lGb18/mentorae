@@ -30,7 +30,12 @@ export default function SubjectViewer({ subjectId, gradeLevel }: SubjectViewerPr
 
   useEffect(() => {
     const fetchContent = async () => {
+      console.log("🎯 SubjectViewer Props:", { subjectId, gradeLevel });
       if (!resolvedId) return
+      console.log("SubjectViewer fetching content for:", {
+      subject_id: resolvedId,
+      grade_level: gradeLevel
+    });
       const { data, error } = await supabase
         .from("subject_content")
         .select("content")
@@ -51,7 +56,7 @@ export default function SubjectViewer({ subjectId, gradeLevel }: SubjectViewerPr
     }
     fetchContent()
   }, [resolvedId, gradeLevel])
-
+  
   return (
     <div
       className="prose max-w-none"

@@ -35,6 +35,7 @@ let data = {
         {
           title: "Dashboard",
           url: "my-profile",
+          isActive: true,
         },
         {
           title: "Account Settings",
@@ -52,16 +53,16 @@ let data = {
         },
         {
           title: "Science",
-          url: "#",
-          isActive: true,
+          url: "/tutor-dashboard/courses/science/:id",
+          
         },
         {
           title: "English",
-          url: "#",
+          url: "/tutor-dashboard/courses/english/:id",
         },
         {
           title: "Filipino",
-          url: "#",
+          url: "/tutor-dashboard/courses/filipino/:id",
         },
         {
           title: "Title 1",
