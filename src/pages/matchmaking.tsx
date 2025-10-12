@@ -183,59 +183,200 @@ export default function Matchmaking() {
       return () => clearTimeout(timer)
     }
   }, [isConfirmed, match, navigate])
+  const [hasActiveMatch, setHasActiveMatch] = useState(false);
 
-  return (
-    <div className="flex flex-col items-center gap-4 p-6">
-      {!loading && !match && (
-        <button
-          onClick={findMatch}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-        >
-          Find a Match
-        </button>
-      )}
+const checkActiveMatches = async () => {
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+  if (!user) return;
 
-      {loading && !match && (
-        <div className="flex flex-col items-center gap-2">
-          <p>Searching for a match...</p>
-          <button
-            onClick={cancelMatch}
-            className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-          >
-            Cancel
-          </button>
+  const { data: matches } = await supabase
+    .from("matches")
+    .select("*")
+    .or(`student_id.eq.${user.id},tutor_id.eq.${user.id}`)
+    .eq("status", "active")
+    .eq("student_confirmed", true)
+    .eq("tutor_confirmed", true);
+
+  setHasActiveMatch(!!matches && matches.length > 0);
+};
+
+useEffect(() => {
+  checkActiveMatches();
+}, [match]);
+
+const shouldShowFindMatch = () => {
+  return !loading && !hasActiveMatch;
+};
+
+const getCurrentMatchStatus = () => {
+  if (hasActiveMatch) {
+    return {
+      status: "has_active_match",
+      message: "You currently have an active match",
+      showActions: false
+    };
+  }
+  
+  if (match && match.status === 'active') {
+    if (match.student_confirmed && match.tutor_confirmed) {
+      return {
+        status: "confirmed",
+        message: "Match confirmed! Redirecting to meeting...",
+        showActions: false
+      };
+    } else {
+      const needsConfirmation = profile?.role === 'student' 
+        ? !match.student_confirmed 
+        : !match.tutor_confirmed;
+      
+      return {
+        status: "pending_confirmation",
+        message: needsConfirmation ? "Please confirm the match" : "Waiting for partner confirmation",
+        showActions: needsConfirmation
+      };
+    }
+  } else if (match && match.status === 'completed') {
+    return {
+      status: "completed",
+      message: "Match completed",
+      showActions: false
+    };
+  } else if (match && match.status === 'cancelled') {
+    return {
+      status: "cancelled", 
+      message: "Match was cancelled",
+      showActions: false
+    };
+  }
+  
+  return {
+    status: "no_match",
+    message: "No active matches",
+    showActions: false
+  };
+};
+
+const currentStatus = getCurrentMatchStatus();
+
+return (
+  <div className="flex flex-col items-center gap-6 p-6">
+    {shouldShowFindMatch() && (
+      <button
+        onClick={findMatch}
+        className="bg-black px-8 py-4 text-white hover:bg-gray-800 border-2 border-black font-medium text-lg"
+      >
+        Find a Match
+      </button>
+    )}
+
+    {loading && !hasActiveMatch && (
+      <div className="flex flex-col items-center gap-4">
+        <div className="border-2 border-black p-6 bg-white text-center">
+          <p className="text-gray-700 text-lg mb-4">Searching for a match...</p>
+          <div className="animate-pulse">🔍</div>
         </div>
-      )}
+        <button
+          onClick={cancelMatch}
+          className="bg-white px-6 py-3 text-black hover:bg-gray-100 border-2 border-black font-medium"
+        >
+          Cancel Search
+        </button>
+      </div>
+    )}
 
-      {match && (
-        <div className="rounded border p-4 shadow w-full max-w-md">
-          <h2 className="font-bold">Match Found!</h2>
-          <p>Subject: {match.subject}</p>
-          <p>Grade Level: {match.grade_level}</p>
-          <p>Status: {match.status}</p>
+    <div className="border-2 border-black p-6 w-full max-w-md bg-white">
+      <h2 className="font-bold text-xl mb-4 border-b-2 border-black pb-2">
+        Current Status
+      </h2>
+      
+      {hasActiveMatch ? (
+        <div className="space-y-4">
+          <div className="p-3 border-2 border-green-600 bg-green-50">
+            <p className="text-green-800 font-large text-center">
+              You have an active match
+            </p>
+          </div>
+          <div className="text-center">
+            
+            <button
+              onClick={() => navigate(`/video/${match?.id}`)}
+              className="bg-black px-6 py-2 text-white hover:bg-gray-800 border-2 border-black font-medium"
+            >
+              Go to Session
+            </button>
+          </div>
+        </div>
+      ) : match && match.status === 'active' ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <p><span className="font-medium">Subject:</span> {match.subject}</p>
+            <p><span className="font-medium">Grade Level:</span> {match.grade_level}</p>
+            <p><span className="font-medium">Match Status:</span> {match.status}</p>
+            <p><span className="font-medium">Student Confirmed:</span> {match.student_confirmed ? '✅' : '❌'}</p>
+            <p><span className="font-medium">Tutor Confirmed:</span> {match.tutor_confirmed ? '✅' : '❌'}</p>
+            <p><span className="font-medium">Your Role:</span> {profile?.role}</p>
+          </div>
 
-          {!isConfirmed ? (
-            <div className="mt-3 flex gap-2">
+          <div className={`p-3 border-2 ${
+            currentStatus.status === "confirmed" ? "border-green-600 bg-green-50" :
+            "border-yellow-600 bg-yellow-50"
+          }`}>
+            <p className={`font-medium ${
+              currentStatus.status === "confirmed" ? "text-green-800" : "text-yellow-800"
+            }`}>
+              {currentStatus.message}
+            </p>
+          </div>
+
+          {currentStatus.showActions && (
+            <div className="flex gap-3 pt-2">
               <button
                 onClick={acceptMatch}
-                className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                className="bg-black px-6 py-2 text-white hover:bg-gray-800 border-2 border-black font-medium flex-1"
               >
-                Accept
+                Accept Match
               </button>
               <button
                 onClick={cancelMatch}
-                className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                className="bg-white px-6 py-2 text-black hover:bg-gray-100 border-2 border-black font-medium flex-1"
               >
-                Cancel
+                Cancel Match
               </button>
             </div>
-          ) : (
-            <p className="mt-2 text-green-600 font-semibold">
-              ✅ Match confirmed! Redirecting to meeting...
-            </p>
           )}
+        </div>
+      ) : match ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <p><span className="font-medium">Subject:</span> {match.subject}</p>
+            <p><span className="font-medium">Grade Level:</span> {match.grade_level}</p>
+            <p><span className="font-medium">Match Status:</span> {match.status}</p>
+          </div>
+
+          <div className={`p-3 border-2 ${
+            match.status === 'completed' ? 'border-gray-600 bg-gray-50' :
+            'border-red-600 bg-red-50'
+          }`}>
+            <p className={`font-medium ${
+              match.status === 'completed' ? 'text-gray-800' : 'text-red-800'
+            }`}>
+              {match.status === 'completed' ? '✅ Match completed' : '❌ Match cancelled'}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-4">
+          <p className="text-gray-600">No active matches found.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            {profile?.role === "student" 
+              ? "Click 'Find a Match' to search for a tutor."
+              : "Click 'Find a Match' to search for a student."
+            }
+          </p>
         </div>
       )}
     </div>
-  )
+  </div>
+)
 }
