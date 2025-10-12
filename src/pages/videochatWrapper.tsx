@@ -11,7 +11,16 @@ type Match = {
 
 export default function VideoChatWrapper() {
   const { matchId } = useParams<{ matchId: string }>();
-  const location = useLocation();
+  // const params = useParams();
+  
+
+  // console.log("🔍 All params:", params);
+  // console.log("🔍 matchId param:", params.matchId);
+  // console.log("🔍 location object:", location);
+
+  // console.log("🔍 matchId from useParams:", matchId);
+  // console.log("🔍 Current URL:", window.location.href);
+  
   const [match, setMatch] = useState<Match | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +49,7 @@ export default function VideoChatWrapper() {
 
   // Conditionally render different UI based on route
   return (
+    
   <div style={{ padding: 16 }}>
     {/* Simple header - only show title */}
     <h1 style={{ margin: '0 0 16px 0', fontSize: 20, fontWeight: 600 }}>
@@ -52,7 +62,7 @@ export default function VideoChatWrapper() {
         <div>Call ID: {matchId}</div>
       </div>
     )}
-
+    
     {/* VideoChat component handles the rest */}
     <VideoChat match={match} user={user} />
   </div>

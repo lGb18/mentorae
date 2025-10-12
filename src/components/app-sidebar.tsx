@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { LogOut, XCircle } from "lucide-react"
 import { supabase } from "@/lib/supabaseClient"
 import { Link } from "react-router-dom"
-
+import { useCurrentMatch } from "@/hooks/useCurrentMatch"; // import the hook
 import { SearchForm } from "@/components/search-form"
 import {
   Collapsible,
@@ -134,14 +134,29 @@ let data = {
   ],
 }
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const matchId = useCurrentMatch(); // get current matchId dynamically
+
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error("Error signing out:", error.message)
-    } else {
-      window.location.href = "/" // back to login/landing
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Error signing out:", error.message);
+    else window.location.href = "/";
+  };
+
+  // override the Join URL dynamically
+  const navMain = data.navMain.map((section) => {
+    if (section.title === "Meetings") {
+      return {
+        ...section,
+        items: section.items.map((item) => {
+          if (item.title === "Join") {
+            return { ...item, url: matchId ? `/join/${matchId}` : "#" };
+          }
+          return item;
+        }),
+      };
     }
-  }
+    return section;
+  });
 
   return (
     <Sidebar {...props}>
@@ -169,7 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {data.navMain.map((item, index) => (
+            {navMain.map((item, index) => (
               <Collapsible
                 key={item.title}
                 defaultOpen={index === 1}
@@ -186,18 +201,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   {item.items?.length ? (
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {item.items.map((item) => (
-                          <SidebarMenuSubItem key={item.title}>
+                        {item.items.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton
                               asChild
-                              isActive={item.isActive}
+                              isActive={subItem.isActive}
                             >
                               <Link
-                                to={item.url}
+                                to={subItem.url}
                                 className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
                               >
-                                {item.title}
-                            </Link>
+                                {subItem.title}
+                              </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
@@ -211,7 +226,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer: Sign Out only */}
+      {/* Footer */}
       <div className="mt-auto p-3 border-t">
         <Button
           variant="ghost"
@@ -225,5 +240,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
