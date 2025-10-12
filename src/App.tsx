@@ -15,6 +15,7 @@ import ChatPage from '@/components/chats/chatpage'
 import CoursePage from './components/course-page'
 import VideoChatWrapper from './pages/videochatWrapper'
 
+import { MainLayout } from './components/main-layout'
 import JoinCallPage from './pages/videoconference-page'
 import MathSubject from '@/pages/courses/math'
 function WelcomePage() {
@@ -62,7 +63,7 @@ function App({ currentUserId }: { currentUserId: string }) {
   return (
     <HashRouter>
     <Routes>
-
+      
       <Route path="/" element={<WelcomePage/>} />
       <Route path="login" element={<LoginPage/>} />
       <Route path="register" element={<RegisterPage/>} />
@@ -71,18 +72,20 @@ function App({ currentUserId }: { currentUserId: string }) {
       <Route path="learner-dashboard" element={<LearnerDashboard/>} />
       <Route path="tutor-dashboard" element={<TutorDashboard/>} />
 
-      <Route path="my-profile" element={<ProfilePage/>} />
-      <Route path="matchmaking" element={<Matchmaking/>} />
-      <Route path="/chats" element={<ChatPage currentUserId={currentUserId} />} />
-      {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
-      <Route path="/video/:matchId" element={<VideoChatWrapper />} /> 
-      <Route path="/tutor-dashboard/courses/math/:id" element={<CoursePage subject="math" />} />
-      <Route path="/tutor-dashboard/courses/science/:id" element={<CoursePage subject="science" />} />
-      <Route path="/tutor-dashboard/courses/english/:id" element={<CoursePage subject="english" />} />
-      <Route path="/tutor-dashboard/courses/filipino/:id" element={<CoursePage subject="filipino" />} />
+      
+      <Route element={<MainLayout/>}>
+        <Route path="my-profile" element={<ProfilePage/>} />
+        <Route path="matchmaking" element={<Matchmaking/>} />
+        <Route path="/chats" element={<ChatPage currentUserId={currentUserId} />} />
+        {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
+        <Route path="/video/:matchId" element={<VideoChatWrapper />} /> 
+        <Route path="/tutor-dashboard/courses/math/:id" element={<CoursePage subject="math" />} />
+        <Route path="/tutor-dashboard/courses/science/:id" element={<CoursePage subject="science" />} />
+        <Route path="/tutor-dashboard/courses/english/:id" element={<CoursePage subject="english" />} />
+        <Route path="/tutor-dashboard/courses/filipino/:id" element={<CoursePage subject="filipino" />} />
 
-      <Route path="/join/:matchId" element={< VideoChatWrapper/>} />
-
+        <Route path="/join/:matchId" element={< VideoChatWrapper/>} />
+      </Route>
 
 
 

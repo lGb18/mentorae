@@ -96,7 +96,7 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Here you could let the user configure app preferences, themes, or notification settings.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
               </p>
               <div className="mt-4 flex justify-end">
                 <Button variant="outline">Save Preferences</Button>

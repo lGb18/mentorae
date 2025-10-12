@@ -7,11 +7,11 @@ export function useCurrentMatch() {
 
   useEffect(() => {
     const fetchCurrentMatch = async () => {
-      // Adjust this query if your table/column names differ
+    
       const { data: matchData } = await supabase
         .from("matches")
         .select("id")
-        .eq("status", "active") // example: fetch the active/current match
+        .eq("status", "active")
         .single();
 
       if (matchData?.id) setMatchId(matchData.id);

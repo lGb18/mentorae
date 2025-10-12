@@ -34,7 +34,7 @@ let data = {
       items: [
         {
           title: "Dashboard",
-          url: "#",
+          url: "my-profile",
         },
         {
           title: "Account Settings",
