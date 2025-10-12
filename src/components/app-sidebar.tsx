@@ -159,86 +159,94 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   });
 
   return (
-    <Sidebar {...props}>
-      {/* Header */}
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="#">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <GalleryVerticalEnd className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Mentorae</span>
-                  <span className="">v1.0.0</span>
-                </div>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <SearchForm />
-      </SidebarHeader>
+  <Sidebar {...props} className="bg-white border-r border-gray-200">
+    {/* Header */}
+    <SidebarHeader className="px-3 py-3 border-b border-gray-100">
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" asChild className="hover:bg-gray-50 w-full pl-3 py-2 transition-colors">
+            <a href="#" className="no-underline w-full flex items-center gap-3">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-black text-white">
+                <GalleryVerticalEnd className="size-4" />
+              </div>
+              <div className="flex flex-col gap-1 leading-none min-w-0">
+                <span className="font-semibold text-sm text-gray-900 truncate">Mentorae</span>
+                <span className="text-xs text-gray-500">v1.0.0</span>
+              </div>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarHeader>
 
-      {/* Main Nav */}
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu>
-            {navMain.map((item, index) => (
-              <Collapsible
-                key={item.title}
-                defaultOpen={index === 1}
-                className="group/collapsible"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>
-                      {item.title}
-                      <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
-                      <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  {item.items?.length ? (
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={subItem.isActive}
+    {/* Main Nav */}
+    <SidebarContent className="py-3 flex-1 overflow-hidden">
+      <SidebarGroup className="w-full">
+        <SidebarMenu className="w-full pl-0">
+          {navMain.map((item, index) => (
+            <Collapsible
+              key={item.title}
+              defaultOpen={index === 1}
+              className="group/collapsible w-full"
+            >
+              <SidebarMenuItem className="w-full pl-0">
+                <CollapsibleTrigger asChild className="w-full">
+                  <SidebarMenuButton className="py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 w-full pl-3 pr-3 flex items-center gap-x-3 transition-colors rounded-md">
+                    <span className="truncate flex-1 text-left">{item.title}</span>
+                    <Plus className="ml-auto size-4 flex-shrink-0 group-data-[state=open]/collapsible:hidden transition-transform duration-200" />
+                    <Minus className="ml-auto size-4 flex-shrink-0 group-data-[state=closed]/collapsible:hidden transition-transform duration-200" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+
+                {item.items?.length ? (
+                  <CollapsibleContent
+                    className="w-full overflow-hidden transition-all duration-300 ease-out"
+                  >
+                    <SidebarMenuSub className="mt-1 w-full pl-0">
+                      {item.items.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.title} className="w-full pl-0">
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={subItem.isActive}
+                            className="text-sm w-full pl-0"
+                          >
+                            <Link
+                              to={subItem.url}
+                              className={`py-3 transition-colors w-full block rounded-md ${
+                                subItem.isActive
+                                  ? 'bg-gray-100 text-gray-900 font-medium'
+                                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                              }`}
                             >
-                              <Link
-                                to={subItem.url}
-                                className="rounded bg-secondary px-4 py-2 hover:bg-secondary/80"
-                              >
-                                {subItem.title}
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  ) : null}
-                </SidebarMenuItem>
-              </Collapsible>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
+                              <span className="truncate block">{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                ) : null}
+              </SidebarMenuItem>
+            </Collapsible>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+    </SidebarContent>
 
-      {/* Footer */}
-      <div className="mt-auto p-3 border-t">
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
-      </div>
+    {/* Footer */}
+    <div className="mt-auto border-t border-gray-100 w-full">
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-50 text-sm font-normal py-2 px-3 h-auto flex items-center transition-colors rounded-md"
+        onClick={handleSignOut}
+      >
+        <LogOut className="mr-3 size-4 flex-shrink-0" />
+        <span className="truncate">Sign Out</span>
+      </Button>
+    </div>
 
-      <SidebarRail />
-    </Sidebar>
-  );
+    <SidebarRail />
+  </Sidebar>
+);
+
 }
