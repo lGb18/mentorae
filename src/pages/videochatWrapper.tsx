@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import VideoChat from "./videochat";
 
@@ -11,10 +11,15 @@ type Match = {
 
 export default function VideoChatWrapper() {
   const { matchId } = useParams<{ matchId: string }>();
+  const location = useLocation();
   const [match, setMatch] = useState<Match | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check if current route is join route
+  const isJoinRoute = location.pathname.includes('/join/');
+
+  // Your existing data loading logic remains the same
   useEffect(() => {
     const loadData = async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -33,13 +38,23 @@ export default function VideoChatWrapper() {
     loadData();
   }, [matchId]);
 
-  if (loading) return <p>Loading video chat...</p>;
-  if (!match || !user) return <p>Unable to load video chat.</p>;
-
+  // Conditionally render different UI based on route
   return (
-    <div style={{ padding: "10px" }}>
-      <h1>Video Conference</h1>
-      <VideoChat match={match} user={user} />
-    </div>
-  );
+  <div style={{ padding: 16 }}>
+    {/* Simple header - only show title */}
+    <h1 style={{ margin: '0 0 16px 0', fontSize: 20, fontWeight: 600 }}>
+      {isJoinRoute ? "Join Call" : "Video Conference"}
+    </h1>
+    
+    {/* Minimal call info for join route */}
+    {isJoinRoute && (
+      <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
+        <div>Call ID: {matchId}</div>
+      </div>
+    )}
+
+    {/* VideoChat component handles the rest */}
+    <VideoChat match={match} user={user} />
+  </div>
+);
 }

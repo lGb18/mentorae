@@ -148,51 +148,152 @@ export default function VideoChat({ match, user }: VideoChatProps) {
       });
     }
   };
+const [audioEnabled, setAudioEnabled] = useState(true);
+const [videoEnabled, setVideoEnabled] = useState(true);
+
+  // Toggle functions
+  const toggleAudio = () => {
+    if (myVideo.current?.srcObject instanceof MediaStream) {
+      const tracks = myVideo.current.srcObject.getAudioTracks();
+      tracks.forEach(track => {
+        track.enabled = !audioEnabled;
+      });
+      setAudioEnabled(!audioEnabled);
+    }
+  };
+
+  const toggleVideo = () => {
+    if (myVideo.current?.srcObject instanceof MediaStream) {
+      const tracks = myVideo.current.srcObject.getVideoTracks();
+      tracks.forEach(track => {
+        track.enabled = !videoEnabled;
+      });
+      setVideoEnabled(!videoEnabled);
+    }
+  };
+
+  // Update your existing end call function to reset states
+  const endCall = () => {
+    if (myVideo.current?.srcObject instanceof MediaStream) {
+      myVideo.current.srcObject.getTracks().forEach((t) => t.stop());
+      myVideo.current.srcObject = null;
+    }
+    if (remoteVideo.current?.srcObject instanceof MediaStream) {
+      remoteVideo.current.srcObject.getTracks().forEach((t) => t.stop());
+      remoteVideo.current.srcObject = null;
+    }
+    setInCall(false);
+    setAudioEnabled(true); // Reset for next call
+    setVideoEnabled(true); // Reset for next call
+  };
 
   return (
-    <div>
-      <h2>Video Chat Demo</h2>
-      <p>My Peer ID: {peerId}</p>
-      <p>Matched Peer ID: {remotePeerId || "Waiting..."}</p>
+  <div>
+    {/* Peer IDs info */}
+    <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
+      <div>My Peer ID: {peerId}</div>
+      <div>Remote Peer ID: {remotePeerId || "Waiting..."}</div>
+    </div>
 
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <video
-          ref={myVideo}
-          muted
-          playsInline
-          style={{ width: "200px", background: "#000" }}
-        />
-        <video
-          ref={remoteVideo}
-          playsInline
-          style={{ width: "200px", background: "#000" }}
-        />
-      </div>
+    {/* Zoom-style video container */}
+    <div style={{ 
+      display: "flex", 
+      justifyContent: "center", 
+      gap: 16, 
+      marginBottom: 16,
+      height: "400px"
+    }}>
+      <video
+        ref={myVideo}
+        muted
+        playsInline
+        style={{ 
+          width: "min(500px, 48%)", 
+          height: "100%",
+          background: "#000",
+          objectFit: "cover"
+        }}
+      />
+      <video
+        ref={remoteVideo}
+        playsInline
+        style={{ 
+          width: "min(500px, 48%)", 
+          height: "100%",
+          background: "#000",
+          objectFit: "cover"
+        }}
+      />
+    </div>
 
+    {/* Simple control buttons */}
+    <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
       {!inCall ? (
-        <button onClick={callRemote} disabled={!remotePeerId}>
+        <button 
+          onClick={callRemote} 
+          disabled={!remotePeerId}
+          style={{ 
+            padding: '8px 16px',
+            border: '1px solid #000',
+            background: '#fff',
+            cursor: remotePeerId ? 'pointer' : 'not-allowed'
+          }}
+        >
           Start Call
         </button>
       ) : (
-        <button
-          onClick={() => {
-            // Stop all media tracks
-            if (myVideo.current?.srcObject instanceof MediaStream) {
-              myVideo.current.srcObject.getTracks().forEach((t) => t.stop());
-              myVideo.current.srcObject = null;
-            }
-            if (remoteVideo.current?.srcObject instanceof MediaStream) {
-              remoteVideo.current.srcObject.getTracks().forEach((t) => t.stop());
-              remoteVideo.current.srcObject = null;
-            }
-            // Reset state
-            setInCall(false);
-          }}
-          style={{ backgroundColor: "red", color: "white" }}
-        >
-          End Call
-        </button>
+        <>
+          <button
+            onClick={toggleAudio}
+            style={{ 
+              padding: '8px 16px',
+              border: '1px solid #000',
+              background: audioEnabled ? '#fff' : '#ddd',
+              cursor: 'pointer'
+            }}
+          >
+            {audioEnabled ? 'Mute' : 'Unmute'}
+          </button>
+          <button
+            onClick={toggleVideo}
+            style={{ 
+              padding: '8px 16px',
+              border: '1px solid #000',
+              background: videoEnabled ? '#fff' : '#ddd', 
+              cursor: 'pointer'
+            }}
+          >
+            {videoEnabled ? 'Video Off' : 'Video On'}
+          </button>
+          <button
+            onClick={() => {
+              // Stop all media tracks
+              if (myVideo.current?.srcObject instanceof MediaStream) {
+                myVideo.current.srcObject.getTracks().forEach((t) => t.stop());
+                myVideo.current.srcObject = null;
+              }
+              if (remoteVideo.current?.srcObject instanceof MediaStream) {
+                remoteVideo.current.srcObject.getTracks().forEach((t) => t.stop());
+                remoteVideo.current.srcObject = null;
+              }
+              // Reset state
+              setInCall(false);
+              setAudioEnabled(true);
+              setVideoEnabled(true);
+            }}
+            style={{ 
+              padding: '8px 16px',
+              border: '1px solid #000',
+              background: '#000',
+              color: '#fff',
+              cursor: 'pointer'
+            }}
+          >
+            End Call
+          </button>
+        </>
       )}
     </div>
-  );
+  </div>
+);
 }
