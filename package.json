@@ -19,11 +19,12 @@
   "dev": "vite",
   "build:renderer": "vite build",
   "build:main": "vite build --mode=production",
-  "build": "tsc && npm run build:main && npm run build:renderer && electron-builder --publish never",
+  "build": "tsc && npm run build:main && npm run build:renderer",
+  "build:electron": "npm run build && electron-builder --publish never",
   "preview": "vite preview",
   "pretest": "vite build --mode=test",
   "test": "vitest run",
-  "dist": "npm run build && electron-builder"
+  "dist": "npm run build:electron-builder"
 
 
   },
@@ -77,9 +78,15 @@
     "files": [
       "dist/**",
       "dist-electron/**",
-      "electron/**/*.js",
-      "electron/**/*.ts"
+      "!**/*.map", 
+      "!**/*.ts",
+      "!**/tsconfig.json",
+      "!dist/win-unpacked/"
+
     ],
+    "extraMetadata": {
+    "compressed": true
+    },
     "directories": {
     "buildResources": "assets"
     },

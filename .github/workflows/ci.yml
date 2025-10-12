@@ -16,7 +16,6 @@ jobs:
       markdown_change: ${{ steps.filter_markdown.outputs.change }}
       markdown_files: ${{ steps.filter_markdown.outputs.change_files }}
     steps:
-
       - name: Check Not Allowed File Changes
         uses: dorny/paths-filter@v2
         id: filter_not_allowed
@@ -65,7 +64,6 @@ jobs:
             change:
               - added|modified: '*.md'
 
-
   job2:
     name: Lint Markdown
     runs-on: ubuntu-latest
@@ -80,34 +78,54 @@ jobs:
       - name: Lint markdown
         run: npx markdownlint-cli ${{ needs.job1.outputs.markdown_files }} --ignore node_modules
 
-job3:
-  name: Build and Upload Electron App
-  runs-on: ${{ matrix.os }}
-  strategy:
-    matrix:
-      os: [ubuntu-latest, macos-latest, windows-latest]
+  job3:
+    name: Build and Upload Electron App
+    runs-on: ${{ matrix.os }}
+    needs: [job1, job2]
+    if: ${{ always() && !contains(needs.*.result, 'failure') }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
-  steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 20
+      - name: Clean previous builds
+        run: |
+          rm -rf dist/
+          rm -rf dist-electron/
+          rm -rf release/
 
-    - name: Install Dependencies
-      run: npm ci
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
 
-    - name: Build Electron App
-      run: npx electron-builder --config.extraMetadata.version=$GITHUB_SHA --publish never
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: electron-installers-${{ matrix.os }}
-        path: |
-          dist/*.exe
-          dist/*.dmg
-          dist/*.AppImage
-          dist/*.deb
-          dist/*.zip
+      - name: Install Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Build Electron App
+        run: npx electron-builder --config.extraMetadata.version=$GITHUB_SHA --publish never
+
+      - name: List build artifacts (debug)
+        run: |
+          echo "Contents of dist folder:"
+          ls -la dist/ || dir dist\
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: electron-installers-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.zip
+            !dist/*-unpacked/
+            !dist/*.blockmap
+          retention-days: 2
