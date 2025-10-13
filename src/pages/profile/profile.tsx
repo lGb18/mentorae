@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function ProfilePage() {
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
+    <div className="p-6 max-w-4xl mx-auto space-y-8 overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-6">
         <Avatar className="h-20 w-20 border-2 border-black">

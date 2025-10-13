@@ -94,7 +94,7 @@ let data = {
         },
         {
           title: "Chat Messages",
-          url: "learner-dashboard/chats",
+          url: "/chats",
         },
       ],
     },
