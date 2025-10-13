@@ -192,7 +192,7 @@ export default function TutorDashboard() {
 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm font-medium text-black mb-3 block">Subjects Taught</Label>
+                    <Label className="text-sm font-medium text-black mb-3 block">Subjects Preference</Label>
                     <div className="space-y-3">
                       {profile.subjects_taught.map((subject: string, index: number) => (
                         <div key={index} className="flex gap-3 items-center">
@@ -230,7 +230,7 @@ export default function TutorDashboard() {
                       onChange={(e) => handleChange("experience", e.target.value)}
                       rows={3}
                       className="border-gray-300 focus:border-black focus:ring-black text-black"
-                      placeholder="Describe your teaching experience and qualifications..."
+                      placeholder=" "
                     />
                   </div>
                 </div>

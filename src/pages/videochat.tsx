@@ -188,112 +188,152 @@ const [videoEnabled, setVideoEnabled] = useState(true);
   };
 
   return (
-  <div>
-    {/* Peer IDs info */}
-    <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
-      <div>My Peer ID: {peerId}</div>
-      <div>Remote Peer ID: {remotePeerId || "Waiting..."}</div>
-    </div>
-
-    {/* Zoom-style video container */}
-    <div style={{ 
-      display: "flex", 
-      justifyContent: "center", 
-      gap: 16, 
-      marginBottom: 16,
-      height: "400px"
-    }}>
-      <video
-        ref={myVideo}
-        muted
-        playsInline
-        style={{ 
-          width: "min(500px, 48%)", 
-          height: "100%",
-          background: "#000",
-          objectFit: "cover"
-        }}
-      />
-      <video
-        ref={remoteVideo}
-        playsInline
-        style={{ 
-          width: "min(500px, 48%)", 
-          height: "100%",
-          background: "#000",
-          objectFit: "cover"
-        }}
-      />
-    </div>
-
-    {/* Simple control buttons */}
-    <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-      {!inCall ? (
-        <button 
-          onClick={callRemote} 
-          disabled={!remotePeerId}
-          style={{ 
-            padding: '8px 16px',
-            border: '1px solid #000',
-            background: '#fff',
-            cursor: remotePeerId ? 'pointer' : 'not-allowed'
-          }}
-        >
-          Start Call
-        </button>
-      ) : (
-        <>
-          <button
-            onClick={toggleAudio}
-            style={{ 
-              padding: '8px 16px',
-              border: '1px solid #000',
-              background: audioEnabled ? '#fff' : '#ddd',
-              cursor: 'pointer'
-            }}
-          >
-            {audioEnabled ? 'Mute' : 'Unmute'}
-          </button>
-          <button
-            onClick={toggleVideo}
-            style={{ 
-              padding: '8px 16px',
-              border: '1px solid #000',
-              background: videoEnabled ? '#fff' : '#ddd', 
-              cursor: 'pointer'
-            }}
-          >
-            {videoEnabled ? 'Video Off' : 'Video On'}
-          </button>
-          <button
-            onClick={() => {
-              // Stop all media tracks
-              if (myVideo.current?.srcObject instanceof MediaStream) {
-                myVideo.current.srcObject.getTracks().forEach((t) => t.stop());
-                myVideo.current.srcObject = null;
-              }
-              if (remoteVideo.current?.srcObject instanceof MediaStream) {
-                remoteVideo.current.srcObject.getTracks().forEach((t) => t.stop());
-                remoteVideo.current.srcObject = null;
-              }
-              // Reset state
-              setInCall(false);
-              setAudioEnabled(true);
-              setVideoEnabled(true);
-            }}
-            style={{ 
-              padding: '8px 16px',
-              border: '1px solid #000',
-              background: '#000',
-              color: '#fff',
-              cursor: 'pointer'
-            }}
-          >
-            End Call
-          </button>
-        </>
-      )}
+   <div>
+  {/* Peer IDs info - More compact and subtle */}
+  <div style={{ 
+    marginBottom: 20, 
+    fontSize: 11, 
+    color: '#666',
+    background: '#fafafa',
+    padding: '8px 12px',
+    border: '1px solid #e0e0e0',
+    fontFamily: 'monospace'
+  }}>
+    <div style={{ display: 'flex', gap: 20 }}>
+      <span><strong>My ID:</strong> {peerId}</span>
+      <span><strong>Remote ID:</strong> {remotePeerId || "Waiting..."}</span>
     </div>
   </div>
+
+  {/* Video container with clean borders */}
+  <div style={{ 
+    display: "flex", 
+    justifyContent: "center", 
+    gap: 16, 
+    marginBottom: 20,
+    height: "400px",
+    background: '#000',
+    padding: 8
+  }}>
+    <video
+      ref={myVideo}
+      muted
+      playsInline
+      style={{ 
+        width: "min(500px, 48%)", 
+        height: "100%",
+        background: "#000",
+        objectFit: "cover",
+        border: '2px solid #fff',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+      }}
+    />
+    <video
+      ref={remoteVideo}
+      playsInline
+      style={{ 
+        width: "min(500px, 48%)", 
+        height: "100%",
+        background: "#000",
+        objectFit: "cover",
+        border: '2px solid #fff',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+      }}
+    />
+  </div>
+
+  {/* Enhanced control buttons - Sharp black/white theme */}
+  <div style={{ 
+    display: "flex", 
+    gap: 12, 
+    justifyContent: "center", 
+    flexWrap: "wrap" 
+  }}>
+    {!inCall ? (
+      <button 
+        onClick={callRemote} 
+        disabled={!remotePeerId}
+        style={{ 
+          padding: '10px 24px',
+          border: '2px solid #000',
+          background: remotePeerId ? '#000' : '#f5f5f5',
+          color: remotePeerId ? '#fff' : '#999',
+          cursor: remotePeerId ? 'pointer' : 'not-allowed',
+          fontWeight: 600,
+          fontSize: 13,
+          letterSpacing: '0.5px',
+          transition: 'all 0.15s ease'
+        }}
+      >
+        JOIN CALL
+      </button>
+    ) : (
+      <>
+        <button
+          onClick={toggleAudio}
+          style={{ 
+            padding: '10px 20px',
+            border: '2px solid #000',
+            background: audioEnabled ? '#000' : '#fff',
+            color: audioEnabled ? '#fff' : '#000',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+            letterSpacing: '0.5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          {audioEnabled ? 'MUTE' : 'UNMUTE'}
+        </button>
+        <button
+          onClick={toggleVideo}
+          style={{ 
+            padding: '10px 20px',
+            border: '2px solid #000',
+            background: videoEnabled ? '#000' : '#fff',
+            color: videoEnabled ? '#fff' : '#000',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+            letterSpacing: '0.5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          {videoEnabled ? 'CAMERA OFF' : 'CAMERA ON'}
+        </button>
+        <button
+          onClick={() => {
+            // Stop all media tracks
+            if (myVideo.current?.srcObject instanceof MediaStream) {
+              myVideo.current.srcObject.getTracks().forEach((t) => t.stop());
+              myVideo.current.srcObject = null;
+            }
+            if (remoteVideo.current?.srcObject instanceof MediaStream) {
+              remoteVideo.current.srcObject.getTracks().forEach((t) => t.stop());
+              remoteVideo.current.srcObject = null;
+            }
+            // Reset state
+            setInCall(false);
+            setAudioEnabled(true);
+            setVideoEnabled(true);
+          }}
+          style={{ 
+            padding: '10px 20px',
+            border: '2px solid #000',
+            background: '#fff',
+            color: '#000',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+            letterSpacing: '0.5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          END CALL
+        </button>
+      </>
+    )}
+  </div>
+</div>
 );
 }

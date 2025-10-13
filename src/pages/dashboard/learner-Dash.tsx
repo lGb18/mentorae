@@ -138,7 +138,7 @@ export default function StudentDashboard() {
                       value={profile.display_name || ""}
                       onChange={(e) => handleChange("display_name", e.target.value)}
                       className="border-gray-300 focus:border-black focus:ring-black text-black"
-                      placeholder="How you'll appear to tutors"
+                      placeholder=" "
                     />
                   </div>
 
@@ -149,7 +149,7 @@ export default function StudentDashboard() {
                       value={profile.full_name || ""}
                       onChange={(e) => handleChange("full_name", e.target.value)}
                       className="border-gray-300 focus:border-black focus:ring-black text-black"
-                      placeholder="Your legal name"
+                      placeholder=" "
                     />
                   </div>
                 </div>
@@ -160,8 +160,8 @@ export default function StudentDashboard() {
                     id="avatar_url"
                     value={profile.avatar_url || ""}
                     onChange={(e) => handleChange("avatar_url", e.target.value)}
-                    className="border-gray-300 focus:border-black focus:ring-black text-black"
-                    placeholder="https://example.com/avatar.jpg"
+                    className="border-gray-300 focus:border-black focus:ring-black text-grey"
+                    placeholder=" "
                   />
                 </div>
 
@@ -172,8 +172,8 @@ export default function StudentDashboard() {
                     value={profile.bio || ""}
                     onChange={(e) => handleChange("bio", e.target.value)}
                     rows={4}
-                    className="border-gray-300 focus:border-black focus:ring-black text-black"
-                    placeholder="Tell tutors about your learning goals and interests..."
+                    className="border-gray-300 focus:border-black focus:ring-black text-grey"
+                    placeholder=" "
                   />
                 </div>
               </section>
@@ -193,12 +193,12 @@ export default function StudentDashboard() {
                       value={profile.grade_level || ""}
                       onChange={(e) => handleChange("grade_level", e.target.value)}
                       className="border-gray-300 focus:border-black focus:ring-black text-black"
-                      placeholder="e.g., 10th Grade, College Freshman"
+                      placeholder=" "
                     />
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-sm font-medium text-black block">Subjects Needed</Label>
+                    <Label className="text-sm font-medium text-black block">Subject Preference</Label>
                     <div className="space-y-3">
                       {profile.subjects_needed.map((subject: string, index: number) => (
                         <div key={index} className="flex gap-3 items-center">
@@ -206,7 +206,7 @@ export default function StudentDashboard() {
                             value={subject || ""}
                             onChange={(e) => handleSubjectChange(index, e.target.value)}
                             className="border-gray-300 focus:border-black focus:ring-black text-black flex-1"
-                            placeholder="e.g., Algebra, Biology, Spanish"
+                            placeholder=" "
                           />
                           <Button
                             type="button"

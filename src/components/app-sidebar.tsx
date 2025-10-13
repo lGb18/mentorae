@@ -48,7 +48,7 @@ let data = {
       url: "/matchmaking",
       items: [
         {
-          title: "Find a Tutor/Tutee",
+          title: "Find a Match",
           url: "/matchmaking",
         },
       ],
