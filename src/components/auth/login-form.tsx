@@ -143,15 +143,22 @@ export function LoginForm({ className, ...props }: React.HTMLAttributes<HTMLDivE
         and <a href="#" className="text-black">Privacy Policy</a>.
       </div>
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="bg-white text-black border border-black shadow-lg rounded-2xl max-w-sm">
           <DialogHeader>
-            <DialogTitle>Login Error</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg font-semibold text-black ">
+              Login Error
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-700 mt-2 text-center">
               {error || "Something went wrong. Please try again."}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button onClick={() => setShowDialog(false)}>OK</Button>
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={() => setShowDialog(false)}
+              className="w-full border border-black bg-black text-white hover:bg-white hover:text-black"
+            >
+              OK
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
