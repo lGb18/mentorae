@@ -75,7 +75,7 @@ export default function CoursePage({ subject }: CoursePageProps) {
           .select("tutor_id")
           .eq("student_id", profileData.id)
           .eq("subject", subjectForMatch)
-          .eq("grade_level", selectedGrade)
+          .in("grade_level", [`Grade ${selectedGrade}`, selectedGrade, "unspecified"])
           .maybeSingle()
 
         if (matchData) {
