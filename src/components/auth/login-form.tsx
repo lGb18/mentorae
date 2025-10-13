@@ -22,22 +22,40 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-    try {
-      const { user, profile } = await login(email, password)
-      if (!user) throw new Error("Login failed")
-      // route by role
-      const role = profile?.role ?? 'student'
-      if (role === 'teacher') navigate("/tutor-dashboard")
-      else navigate("/learner-dashboard")
-    } catch (err: any) {
-      setError(err.message || "Login failed")
-    } finally {
-      setLoading(false)
+  e.preventDefault()
+  setError(null)
+  setLoading(true)
+  
+  try {
+    const { user, profile } = await login(email, password)
+    if (!user) throw new Error("Login failed")
+    
+    // route by role
+    const role = profile?.role ?? 'student'
+    if (role === 'teacher') navigate("/tutor-dashboard")
+    else navigate("/learner-dashboard")
+    
+  } catch (err: any) {
+    console.error('Login error:', err)
+    
+
+    if (err?.code === 'invalid_credentials') {
+      setError("Invalid email or password. Please try again.")
+    } 
+
+    else if (err?.code === 'email_not_confirmed') {
+      setError("Please confirm your email address before logging in.")
     }
+    else if (err?.message?.includes('Invalid login credentials')) {
+      setError("Invalid email or password. Please try again.")
+    }
+    else {
+      setError(err?.message || "Login failed. Please try again.")
+    }
+  } finally {
+    setLoading(false)
   }
+}
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="border border-black">
