@@ -118,104 +118,138 @@ export default function TutorDashboard() {
       <AppSidebar />
 
       <SidebarInset>
-        <header className="flex h-16 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <h1 className="text-2xl font-bold">Tutor Dashboard</h1>
+        <header className="flex h-16 items-center gap-2 border-b border-gray-300 px-4 bg-white">
+          <SidebarTrigger className="-ml-1 text-black hover:bg-gray-100" />
+          <Separator orientation="vertical" className="mr-2 h-4 bg-gray-300" />
+          <h1 className="text-xl font-bold text-black tracking-tight">Tutor Dashboard</h1>
         </header>
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 bg-gray-50">
           <div className="mx-auto max-w-4xl">
-            <h2 className="text-3xl font-bold mb-6">Profile Settings</h2>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-black mb-2 tracking-tight">Profile Settings</h2>
+              <div className="h-1 w-12 bg-black"></div>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Info */}
-              <section className="space-y-4">
-                <h3 className="text-xl font-semibold">Basic Information</h3>
-
-                <div className="space-y-2">
-                  <Label htmlFor="display_name">Display Name</Label>
-                  <Input
-                    id="display_name"
-                    value={profile.display_name || ""}
-                    onChange={(e) => handleChange("display_name", e.target.value)}
-                  />
+              <section className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="mb-6 pb-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-black">Basic Information</h3>
+                  <p className="text-sm text-gray-600 mt-1">Update your personal details</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    value={profile.full_name || ""}
-                    onChange={(e) => handleChange("full_name", e.target.value)}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="display_name" className="text-sm font-medium text-black">Display Name</Label>
+                    <Input
+                      id="display_name"
+                      value={profile.display_name || ""}
+                      onChange={(e) => handleChange("display_name", e.target.value)}
+                      className="border-gray-300 focus:border-black focus:ring-black text-black"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="full_name" className="text-sm font-medium text-black">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      value={profile.full_name || ""}
+                      onChange={(e) => handleChange("full_name", e.target.value)}
+                      className="border-gray-300 focus:border-black focus:ring-black text-black"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="avatar_url">Avatar URL</Label>
+                <div className="space-y-3 mt-6">
+                  <Label htmlFor="avatar_url" className="text-sm font-medium text-black">Avatar URL</Label>
                   <Input
                     id="avatar_url"
                     value={profile.avatar_url || ""}
                     onChange={(e) => handleChange("avatar_url", e.target.value)}
+                    className="border-gray-300 focus:border-black focus:ring-black text-black"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                <div className="space-y-3 mt-6">
+                  <Label htmlFor="bio" className="text-sm font-medium text-black">Bio</Label>
                   <Textarea
                     id="bio"
                     value={profile.bio || ""}
                     onChange={(e) => handleChange("bio", e.target.value)}
                     rows={4}
+                    className="border-gray-300 focus:border-black focus:ring-black text-black"
                   />
                 </div>
               </section>
 
               {/* Teaching Details */}
-              <section className="space-y-4">
-                <h3 className="text-xl font-semibold">Teaching Details</h3>
-
-                <div className="space-y-2">
-                  <Label>Subjects Taught</Label>
-                  {profile.subjects_taught.map((subject: string, index: number) => (
-                    <div key={index} className="flex gap-2 mb-2">
-                      <Input
-                        value={subject || ""}
-                        onChange={(e) => handleSubjectChange(index, e.target.value)}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => removeSubject(index)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button type="button" variant="outline" onClick={addSubject}>
-                    Add Subject
-                  </Button>
+              <section className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="mb-6 pb-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-black">Teaching Details</h3>
+                  <p className="text-sm text-gray-600 mt-1">Define your teaching expertise</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="experience">Experience</Label>
-                  <Textarea
-                    id="experience"
-                    value={profile.experience || ""}
-                    onChange={(e) => handleChange("experience", e.target.value)}
-                    rows={3}
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-black mb-3 block">Subjects Taught</Label>
+                    <div className="space-y-3">
+                      {profile.subjects_taught.map((subject: string, index: number) => (
+                        <div key={index} className="flex gap-3 items-center">
+                          <Input
+                            value={subject || ""}
+                            onChange={(e) => handleSubjectChange(index, e.target.value)}
+                            className="border-gray-300 focus:border-black focus:ring-black text-black flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => removeSubject(index)}
+                            className="border-gray-300 text-black hover:bg-gray-100 hover:border-black"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={addSubject}
+                      className="mt-4 border-gray-300 text-black hover:bg-gray-100 hover:border-black"
+                    >
+                      + Add Subject
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="experience" className="text-sm font-medium text-black">Experience</Label>
+                    <Textarea
+                      id="experience"
+                      value={profile.experience || ""}
+                      onChange={(e) => handleChange("experience", e.target.value)}
+                      rows={3}
+                      className="border-gray-300 focus:border-black focus:ring-black text-black"
+                      placeholder="Describe your teaching experience and qualifications..."
+                    />
+                  </div>
                 </div>
               </section>
 
               {/* Availability */}
-              <section className="space-y-4">
-                <h3 className="text-xl font-semibold">Availability</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <section className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="mb-6 pb-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-black">Availability</h3>
+                  <p className="text-sm text-gray-600 mt-1">Set your weekly teaching schedule</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   {Object.entries(profile.availability).map(([day, data]: any) => (
-                    <div key={day} className="space-y-2 p-3 border rounded-lg">
-                      <Label className="capitalize">{day}</Label>
-                      <div className="flex items-center space-x-2">
+                    <div key={day} className="space-y-3 p-4 border border-gray-300 rounded-lg bg-white">
+                      <Label className="capitalize text-sm font-medium text-black block text-center">
+                        {day}
+                      </Label>
+                      <div className="flex items-center justify-center space-x-2">
                         <input
                           type="checkbox"
                           checked={data.available}
@@ -226,8 +260,9 @@ export default function TutorDashboard() {
                             }
                             handleChange("availability", newAvailability)
                           }}
+                          className="w-4 h-4 text-black border-gray-300 focus:ring-black"
                         />
-                        <span>Available</span>
+                        <span className="text-sm text-black">Available</span>
                       </div>
                       {data.available && (
                         <Input
@@ -239,6 +274,8 @@ export default function TutorDashboard() {
                             }
                             handleChange("availability", newAvailability)
                           }}
+                          className="border-gray-300 focus:border-black focus:ring-black text-black text-sm"
+                          placeholder="9:00 AM - 5:00 PM"
                         />
                       )}
                     </div>
@@ -246,9 +283,15 @@ export default function TutorDashboard() {
                 </div>
               </section>
 
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save Changes"}
-              </Button>
+              <div className="flex justify-end pt-4 border-t border-gray-200">
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="bg-black text-white hover:bg-gray-800 px-8 py-2 font-medium"
+                >
+                  {loading ? "Saving Changes..." : "Save Changes"}
+                </Button>
+              </div>
             </form>
           </div>
         </main>

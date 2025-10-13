@@ -25,7 +25,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
+
 let data = {
   navMain: [
     {
@@ -40,6 +40,16 @@ let data = {
         {
           title: "Account Settings",
           url: "#",
+        },
+      ],
+    },
+    {
+      title: "Meet and Match",
+      url: "/matchmaking",
+      items: [
+        {
+          title: "Find a Tutor/Tutee",
+          url: "/matchmaking",
         },
       ],
     },
@@ -64,14 +74,6 @@ let data = {
           title: "Filipino",
           url: "/tutor-dashboard/courses/filipino/:id",
         },
-        {
-          title: "Title 1",
-          url: "#",
-        },
-        {
-          title: "Title 2",
-          url: "#",
-        },
       ],
     },
     {
@@ -91,7 +93,7 @@ let data = {
           url: "#",
         },
         {
-          title: "Title 1",
+          title: "Chat Messages",
           url: "learner-dashboard/chats",
         },
       ],
@@ -100,10 +102,6 @@ let data = {
       title: "Settings",
       url: "#",
       items: [
-        {
-          title: "Customize",
-          url: "#",
-        },
         {
           title: "Themes",
           url: "#",
@@ -116,22 +114,9 @@ let data = {
           title: "About",
           url: "#",
         },
-        {
-          title: "Title 1",
-          url: "#",
-        },
       ],
     },
-    {
-      title: "Meet and Match",
-      url: "/matchmaking",
-      items: [
-        {
-          title: "Find a Tutor/Tutee",
-          url: "/matchmaking",
-        },
-      ],
-    },
+    
   ],
 }
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
