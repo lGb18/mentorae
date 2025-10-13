@@ -8,7 +8,7 @@ export default function Matchmaking() {
   const [profile, setProfile] = useState<any>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
   const navigate = useNavigate()
-
+  
   // 🔍 MAIN MATCH FUNCTION
   const findMatch = async () => {
     setLoading(true)
@@ -73,8 +73,9 @@ export default function Matchmaking() {
       .eq("role", p.role === "student" ? "teacher" : "student")
         .contains("subjects", [payload.subjects[0]]) // <-- safer array match
       // .ilike('subjects', `%${payload.subjects[0]}%`)
-      .limit(1)
-      .single()
+      .order("created_at", { ascending: false })
+    .limit(1)                                  
+    .maybeSingle(); 
 
     //If found, create a match
     if (existing) {
@@ -101,21 +102,27 @@ export default function Matchmaking() {
     }
     // Poll for matches every 3s
     const interval = setInterval(async () => {
-      const { data: matchData } = await supabase
-        .from("matches")
-        .select("*")
-        .or(`student_id.eq.${p.id},tutor_id.eq.${p.id}`)
-        .order("created_at", { ascending: false })
-        .limit(1)
+  const { data: matchData } = await supabase
+    .from("matches")
+    .select("*")
+    .or(`student_id.eq.${p.id},tutor_id.eq.${p.id}`)
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-      if (matchData && matchData.length > 0) {
-        setMatch(matchData[0])
-        clearInterval(interval)
-        setLoading(false)
-      }
-      console.log("Polling matches for user:", p.id, "→ found:", matchData)
+  const activeMatch =
+    matchData && matchData.length > 0
+      ? matchData.find((m) => m.status === "active" || m.status === "pending")
+      : null;
 
-    }, 3000)
+  if (activeMatch) {
+    setMatch(activeMatch);
+    clearInterval(interval);
+    setLoading(false);
+  }
+
+  console.log("Polling matches for user:", p.id, "→ found:", matchData);
+}, 3000);
+
   }
 
   // ❌ CANCEL MATCH
