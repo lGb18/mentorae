@@ -156,7 +156,7 @@ export default function CoursePage({ subject }: CoursePageProps) {
           <p>Welcome, {profile.display_name}</p>
 
           {/* Grade selector - now using DB format */}
-          <label className="mr-2">Select Grade:</label>
+          <label className="mr-2">Select Level:</label>
           <select
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
