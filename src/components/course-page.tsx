@@ -223,31 +223,44 @@ export default function CoursePage({ subject }: CoursePageProps) {
               gradeLevel={`Grade ${selectedGrade}`}
             />
           )}
-          {matchedTutorId && (
-            <button
-              className="bg-black-500 text-black px-4 py-2 rounded mt-2"
-              onClick={async () => {
-                try {
-                  const { data: match } = await supabase
-                    .from("matches")
-                    .select("id")
-                    .eq("student_id", profile.id)
-                    .eq("tutor_id", matchedTutorId)
-                    .single()
+          {matchedTutorId && profile?.id && (
+          <button
+            className="bg-black-500 text-black px-4 py-2 rounded mt-2"
+            onClick={async () => {
+              try {
+                // Fetch only the active match, latest first
+                const { data: matches, error } = await supabase
+                  .from("matches")
+                  .select("*")
+                  .eq("student_id", profile.id)
+                  .eq("tutor_id", matchedTutorId)
+                  .eq("status", "active")          // only active
+                  .order("created_at", { ascending: false })
+                  .limit(1);                        // only one row
 
-                  if (match) {
-                    await endMatch(match.id)
-                    setMatchedTutorId(null)
-                    setHasContent(false)
-                  }
-                } catch (err) {
-                  console.error("Error ending match:", err)
+                if (error) {
+                  console.error("Failed to fetch match before ending:", error);
+                  return;
                 }
-              }}
-            >
-              End Match
-            </button>
-          )}
+
+                if (matches && matches.length > 0) {
+                  const match = matches[0];
+                  await endMatch(match.id);
+                  setMatchedTutorId(null);
+                  setHasContent(false);
+                  console.log("Match ended:", match.id);
+                } else {
+                  console.warn("No active match found for IDs", { profileId: profile.id, matchedTutorId });
+                }
+              } catch (err) {
+                console.error("Error ending match:", err);
+              }
+            }}
+          >
+            End Match
+          </button>
+        )}
+
         </div>
       )}
     </div>
