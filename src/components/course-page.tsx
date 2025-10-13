@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import SubjectEditor from "./subject-editor"
 import SubjectViewer from "./subject-viewer"
-
+import {endMatch} from "@/lib/match-table"
 type Profile = {
   id: string
   email: string
@@ -76,6 +76,7 @@ export default function CoursePage({ subject }: CoursePageProps) {
           .eq("student_id", profileData.id)
           .eq("subject", subjectForMatch)
           .in("grade_level", [`Grade ${selectedGrade}`, selectedGrade, "unspecified"])
+          .eq("status", "active")
           .maybeSingle()
 
         if (matchData) {
@@ -219,8 +220,33 @@ export default function CoursePage({ subject }: CoursePageProps) {
           ) : (
             <SubjectViewer 
               subjectId={subject} 
-              gradeLevel={`Grade ${selectedGrade}`} // Pass "Grade 5" format
+              gradeLevel={`Grade ${selectedGrade}`}
             />
+          )}
+          {matchedTutorId && (
+            <button
+              className="bg-black-500 text-black px-4 py-2 rounded mt-2"
+              onClick={async () => {
+                try {
+                  const { data: match } = await supabase
+                    .from("matches")
+                    .select("id")
+                    .eq("student_id", profile.id)
+                    .eq("tutor_id", matchedTutorId)
+                    .single()
+
+                  if (match) {
+                    await endMatch(match.id)
+                    setMatchedTutorId(null)
+                    setHasContent(false)
+                  }
+                } catch (err) {
+                  console.error("Error ending match:", err)
+                }
+              }}
+            >
+              End Match
+            </button>
           )}
         </div>
       )}

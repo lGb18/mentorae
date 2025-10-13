@@ -232,7 +232,7 @@ const getCurrentMatchStatus = () => {
       
       return {
         status: "pending_confirmation",
-        message: needsConfirmation ? "Please confirm the match" : "Waiting for partner confirmation",
+        message: needsConfirmation ? "Please confirm the match" : "Waiting for peer confirmation",
         showActions: needsConfirmation
       };
     }
@@ -361,7 +361,7 @@ return (
             <p className={`font-medium ${
               match.status === 'completed' ? 'text-gray-800' : 'text-red-800'
             }`}>
-              {match.status === 'completed' ? '✅ Match completed' : '❌ Match cancelled'}
+              {match.status === 'completed' ? 'Match completed' : 'Match cancelled'}
             </p>
           </div>
         </div>
