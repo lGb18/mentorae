@@ -24,7 +24,7 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-
+import SidebarUser from "./sidebar-user"
 
 let data = {
   navMain: [
@@ -220,6 +220,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </SidebarContent>
 
     {/* Footer */}
+    <SidebarUser></SidebarUser>
     <div className="mt-auto border-t border-gray-100 w-full">
       <Button
         variant="ghost"
