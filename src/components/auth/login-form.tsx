@@ -8,32 +8,57 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { login } from "@/lib/auth"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const navigate = useNavigate()
+
+export function LoginForm({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [showDialog, setShowDialog] = useState(false)
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
     try {
       const { user, profile } = await login(email, password)
       if (!user) throw new Error("Login failed")
-      // route by role
-      const role = profile?.role ?? 'student'
-      if (role === 'teacher') navigate("/tutor-dashboard")
+
+      const role = profile?.role ?? "student"
+      if (role === "teacher") navigate("/tutor-dashboard")
       else navigate("/learner-dashboard")
+
     } catch (err: any) {
-      setError(err.message || "Login failed")
+      console.error("Login error:", err)
+
+      if (err?.code === "invalid_credentials") {
+        setError("Invalid email or password. Please try again.")
+      } else if (err?.code === "email_not_confirmed") {
+        setError("Please confirm your email address before logging in.")
+      } else if (err?.message?.includes("Invalid login credentials")) {
+        setError("Invalid email or password. Please try again.")
+      } else {
+        setError(err?.message || "Login failed. Please try again.")
+      }
+
+      setShowDialog(true)
     } finally {
       setLoading(false)
     }
@@ -117,6 +142,27 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         By clicking continue, you agree to our <a href="#" className="text-black">Terms of Service</a>{" "}
         and <a href="#" className="text-black">Privacy Policy</a>.
       </div>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="bg-white text-black border border-black shadow-lg rounded-2xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-black ">
+              Login Error
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-700 mt-2 text-center">
+              {error || "Something went wrong. Please try again."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={() => setShowDialog(false)}
+              className="w-full border border-black bg-black text-white hover:bg-white hover:text-black"
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+    
   )
 }

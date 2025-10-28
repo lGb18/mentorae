@@ -23,8 +23,8 @@ function WelcomePage() {
       <div className="w-full max-w-xs bg-white border border-black rounded-sm p-8">
         {/* App Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-24 h-24 bg-black rounded-sm flex items-center justify-center">
-            <span className="text-white font-medium text-xs">Mentorae</span>
+          <div className="w-24 h-12 bg-black rounded-sm flex items-center justify-center">
+            <span className="text-white font-large text-xs">Mentorae</span>
           </div>
         </div>
 

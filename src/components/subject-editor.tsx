@@ -12,13 +12,15 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
   const [subjectId, setSubjectId] = useState<string | null>(null)
   const [contentId, setContentId] = useState<string | null>(null)
   const [content, setContent] = useState("")
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
 
   const modules = {
   toolbar: [
     [{ header: [1, 2, 3, false] }],
     ["bold", "italic", "underline", "strike"],
     [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"], // <- enables image button
+    ["link", "image"],
     ["clean"]
   ]
 };
@@ -58,7 +60,12 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
   }, [subjectName, gradeLevel, tutorId])
 
   const handleSave = async () => {
-    if (!subjectId) return
+  if (!subjectId) return;
+  
+  setIsSaving(true);
+  setSaveStatus('Saving...');
+  
+  try {
     const { error } = await supabase
       .from("subject_content")
       .upsert({
@@ -68,19 +75,52 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
         grade_level: gradeLevel,
         content,
         updated_at: new Date(),
-      })
-    if (error) console.error("Error saving:", error)
+      });
+    
+    if (error) {
+      console.error("Error saving:", error);
+      setSaveStatus('Error saving content');
+    } else {
+      setSaveStatus('Saved successfully!');
+    }
+  } catch (error) {
+    console.error("Error saving:", error);
+    setSaveStatus('Error saving content');
+  } finally {
+    setIsSaving(false);
+    // Clear status message after 3 seconds
+    setTimeout(() => setSaveStatus(''), 3000);
   }
+};
 
-  return (
-    <div>
-      <ReactQuill value={content} onChange={setContent} modules={modules} theme="snow" />
+return (
+  <div>
+    <ReactQuill value={content} onChange={setContent} modules={modules} theme="snow" />
+    <div className="mt-2 flex items-center gap-4">
       <button
         onClick={handleSave}
-        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+        disabled={isSaving}
+        className={`px-4 py-2 rounded flex items-center gap-2 ${
+          isSaving 
+            ? 'bg-gray-400 cursor-not-allowed' 
+            : 'bg-blue-500 hover:bg-blue-600'
+        } text-white`}
       >
-        {contentId ? "Save Changes" : "Create Content"}
+        {isSaving && (
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        )}
+        {isSaving ? 'Saving...' : (contentId ? "Save Changes" : "Create Content")}
       </button>
+      
+      {saveStatus && (
+        <span className={`text-sm ${
+          saveStatus.includes('Error') ? 'text-red-500' : 'text-black-500'
+        }`}>
+          {saveStatus}
+        </span>
+      )}
     </div>
-  )
+  </div>
+)
+
 }

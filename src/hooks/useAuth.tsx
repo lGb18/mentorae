@@ -14,63 +14,117 @@ export function useAuth() {
   const [user, setUser] = useState<any | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // fetch user + profile once on mount
+  // Fetch user profile data
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    try {
+      const { data: p, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single()
+      
+      if (profileError) throw profileError
+      return p
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+      setError('Failed to load user profile')
+      return null
+    }
+  }, [])
+
+  // Initialize auth state
   useEffect(() => {
     let mounted = true
 
     const init = async () => {
       setLoading(true)
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (!mounted) return
-      setUser(currentUser)
+      setError(null)
+      
+      try {
+        // Get current session first
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (!mounted) return
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          setError('Authentication error')
+          return
+        }
 
-      if (currentUser?.id) {
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentUser.id)
-          .single()
-        if (mounted) setProfile(p)
+        if (session?.user) {
+          setUser(session.user)
+          const userProfile = await fetchUserProfile(session.user.id)
+          if (mounted && userProfile) {
+            setProfile(userProfile)
+          }
+        } else {
+          setUser(null)
+          setProfile(null)
+        }
+      } catch (err) {
+        console.error('Auth init error:', err)
+        if (mounted) {
+          setError('Failed to initialize authentication')
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
       }
-      setLoading(false)
     }
 
     init()
 
-    // listen to auth changes
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const u = session?.user ?? null
-      setUser(u)
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return
 
-      if (u?.id) {
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", u.id)
-          .single()
-        setProfile(p)
-      } else {
-        setProfile(null)
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
+
+        if (currentUser?.id) {
+          const userProfile = await fetchUserProfile(currentUser.id)
+          if (mounted) {
+            setProfile(userProfile)
+          }
+        } else {
+          setProfile(null)
+        }
+        
+        setLoading(false)
       }
-    })
+    )
 
     return () => {
-      sub.subscription.unsubscribe()
+      subscription.unsubscribe()
       mounted = false
     }
-  }, [])
+  }, [fetchUserProfile])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setProfile(null)
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      setUser(null)
+      setProfile(null)
+    } catch (err) {
+      console.error('Sign out error:', err)
+      setError('Failed to sign out')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   return {
     user,
     profile,
     loading,
+    error,
     signUp,
     login,
     updateProfile,
