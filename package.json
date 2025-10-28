@@ -21,6 +21,7 @@
   "build:main": "vite build --mode=production",
   "build": "tsc && npm run build:main && npm run build:renderer",
   "build:electron": "npm run build && electron-builder --publish never",
+  "build:electron-builder": "electron-builder",
   "preview": "vite preview",
   "pretest": "vite build --mode=test",
   "test": "vitest run",
@@ -81,7 +82,8 @@
       "!**/*.map", 
       "!**/*.ts",
       "!**/tsconfig.json",
-      "!dist/win-unpacked/"
+      "!dist/win-unpacked/",
+      "package.json"
 
     ],
     "extraMetadata": {

@@ -61,7 +61,7 @@ function WelcomePage() {
 function App({ currentUserId }: { currentUserId: string }) {
 
   return (
-    <HashRouter>
+   
     <Routes>
       
       <Route path="/" element={<WelcomePage/>} />
@@ -90,7 +90,7 @@ function App({ currentUserId }: { currentUserId: string }) {
 
 
     </Routes>
-    </HashRouter>
+   
     // <div className='App'>
     //   <div className='logo-box'>
     //     <a href='https://github.com/electron-vite/electron-vite-react' target='_blank'>

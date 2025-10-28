@@ -1,14 +1,15 @@
 import { rmSync } from "node:fs"
 import path from "path"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 import react from "@vitejs/plugin-react"
 import electron from "vite-plugin-electron/simple"
 import pkg from "./package.json"
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => { 
   rmSync("dist-electron", { recursive: true, force: true })
 
+  const env = loadEnv(mode, process.cwd(), "") 
   const isServe = command === "serve"
   const isBuild = command === "build"
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG
@@ -19,6 +20,10 @@ export default defineConfig(({ command }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
+    },
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(env.VITE_SUPABASE_URL),
+      "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
     },
     plugins: [
       react(),
@@ -59,13 +64,16 @@ export default defineConfig(({ command }) => {
         renderer: {},
       }),
     ],
-    server: process.env.VSCODE_DEBUG && (() => {
-      const url = new URL(pkg.debug.env.VITE_DEV_SERVER_URL)
-      return {
-        host: url.hostname,
-        port: +url.port,
-      }
-    })(),
+    server:
+      process.env.VSCODE_DEBUG &&
+      (() => {
+        const url = new URL(pkg.debug.env.VITE_DEV_SERVER_URL)
+        return {
+          host: url.hostname,
+          port: +url.port,
+        }
+      })(),
     clearScreen: false,
   }
 })
+

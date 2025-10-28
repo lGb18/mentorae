@@ -1,4 +1,7 @@
 name: Build Installers
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
 on:
   workflow_dispatch:
