@@ -1,7 +1,7 @@
 name: Build Installers
 env:
-  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
 on:
   workflow_dispatch:
@@ -22,8 +22,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - run: npm install
-      - run: npm run build:electron
+
+      - name: Build Electron App
+        run: npm run build:electron
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
       - uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.os }}
