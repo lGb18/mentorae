@@ -25,12 +25,6 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
   ]
 };
 
-<ReactQuill
-  value={content}
-  onChange={setContent}
-  modules={modules}
-  theme="snow"
-/>
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -38,6 +32,7 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
           .from("subjects")
           .select("id")
           .eq("name", subjectName)
+          .eq("tutor_id", tutorId)
           .single()
         setSubjectId(subject?.id || null)
 

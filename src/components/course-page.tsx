@@ -1,135 +1,111 @@
-import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabaseClient"
-import SubjectEditor from "./subject-editor"
-import SubjectViewer from "./subject-viewer"
-import {endMatch} from "@/lib/match-table"
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import SubjectEditor from "./subject-editor";
+import SubjectViewer from "./subject-viewer";
+import { endMatch } from "@/lib/match-table";
+
 type Profile = {
-  id: string
-  email: string
-  role: "student" | "teacher"
-  display_name: string
-}
+  id: string;
+  email: string;
+  role: "student" | "teacher";
+  display_name: string;
+};
 
 type CoursePageProps = {
-  subject: string
-}
+  subject: string;
+  subjectId: string;
+};
 
-export default function CoursePage({ subject }: CoursePageProps) {
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [hasContent, setHasContent] = useState(false)
-  const [selectedGrade, setSelectedGrade] = useState("1")
-  const [matchedTutorId, setMatchedTutorId] = useState<string | null>(null)
+export default function CoursePage({ subject, subjectId }: CoursePageProps) {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hasContent, setHasContent] = useState(false);
+  const [selectedGrade, setSelectedGrade] = useState("1");
+  const [matchedTutorId, setMatchedTutorId] = useState<string | null>(null);
 
   useEffect(() => {
-  async function fetchProfile() {
-    setLoading(true)
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+    async function fetchProfile() {
+      setLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setProfile(null);
+          return;
+        }
 
-      if (!session?.user) {
-        setProfile(null)
-        return
-      }
-
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single()
-
-      if (error) throw error
-      setProfile(profileData)
-
-      // Fetch subject ID
-      const { data: subjects, error: subErr } = await supabase
-        .from("subjects")
-        .select("id")
-        .eq("name", subject.toLowerCase())
-        .single()
-
-      if (subErr || !subjects) {
-        console.error(`Subject "${subject}" not found`)
-        return
-      }
-
-      if (profileData.role === "teacher") {
-        // For teachers: check if they have content
-        const { data: contentData } = await supabase
-          .from("subject_content")
+        const { data: profileData, error } = await supabase
+          .from("profiles")
           .select("*")
-          .eq("tutor_id", profileData.id)
-          .eq("subject_id", subjects.id)
-          .eq("grade_level", `Grade ${selectedGrade}`)
-          .maybeSingle()
+          .eq("id", session.user.id)
+          .single();
+        if (error) throw error;
+        setProfile(profileData);
 
-        if (contentData) setHasContent(true)
-      } else {
-        // For students: find their matched tutor for this subject and grade
-        const subjectForMatch = subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase()
-        
-        const { data: matchData } = await supabase
-          .from("matches")
-          .select("tutor_id")
-          .eq("student_id", profileData.id)
-          .eq("subject", subjectForMatch)
-          .in("grade_level", [`Grade ${selectedGrade}`, selectedGrade, "unspecified"])
-          .eq("status", "active")
-          .maybeSingle()
-
-        if (matchData) {
-          setMatchedTutorId(matchData.tutor_id)
-          
-          // Check if matched tutor has content
+        // For teachers: check if they have content
+        if (profileData.role === "teacher") {
           const { data: contentData } = await supabase
             .from("subject_content")
             .select("*")
-            .eq("tutor_id", matchData.tutor_id)
-            .eq("subject_id", subjects.id)
+            .eq("tutor_id", profileData.id)
+            .eq("subject_id", subjectId)
             .eq("grade_level", `Grade ${selectedGrade}`)
-            .maybeSingle()
+            .maybeSingle();
 
-          if (contentData) setHasContent(true)
+          if (contentData) setHasContent(true);
+        } else {
+          // For students: find matched tutor
+          const subjectForMatch = subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
+          const { data: matchData } = await supabase
+            .from("matches")
+            .select("tutor_id")
+            .eq("student_id", profileData.id)
+            .eq("subject", subjectForMatch)
+            .in("grade_level", [`Grade ${selectedGrade}`, selectedGrade, "unspecified"])
+            .eq("status", "active")
+            .maybeSingle();
+
+          if (matchData) {
+            setMatchedTutorId(matchData.tutor_id);
+
+            // Check if matched tutor has content
+            const { data: contentData } = await supabase
+              .from("subject_content")
+              .select("*")
+              .eq("tutor_id", matchData.tutor_id)
+              .eq("subject_id", subjectId)
+              .eq("grade_level", `Grade ${selectedGrade}`)
+              .maybeSingle();
+
+            if (contentData) setHasContent(true);
+          }
         }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Error loading profile:", err)
-    } finally {
-      setLoading(false)
     }
-  }
 
-  fetchProfile()
-}, [subject, selectedGrade])
+    fetchProfile();
+  }, [subject, subjectId, selectedGrade]);
 
   const handleCreateContent = async () => {
-    if (!profile) return
+    if (!profile) return;
     try {
-      const { data: subjects } = await supabase
-        .from("subjects")
-        .select("id")
-        .eq("name", subject.toLowerCase())
-        .single()
-
-      if (!subjects) throw new Error(`Subject "${subject}" not found`)
-
       await supabase.from("subject_content").insert({
         tutor_id: profile.id,
-        subject_id: subjects.id,
-        grade_level: `Grade ${selectedGrade}`, // Use "Grade 5" format for subject_content
+        subject_id: subjectId,
+        grade_level: `Grade ${selectedGrade}`,
         content: "",
-      })
-
-      setHasContent(true)
+      });
+      setHasContent(true);
     } catch (err) {
-      console.error("Error creating subject content:", err)
+      console.error("Error creating subject content:", err);
     }
-  }
+  };
 
-  if (loading) return <p>Loading...</p>
-  if (!profile) return <p>Please login to access this material</p>
+  if (loading) return <p>Loading...</p>;
+  if (!profile) return <p>Please login to access this material</p>;
 
   return (
     <div className="p-4">

@@ -13,8 +13,9 @@ import ProfilePage from '@/pages/profile/profile'
 import Matchmaking from '@/pages/matchmaking'
 import ChatPage from '@/components/chats/chatpage'
 import CoursePage from './components/course-page'
+import CreateSubject from './components/create-subject'
 import VideoChatWrapper from './pages/videochatWrapper'
-
+import CoursePageWrapper from './pages/courses/course-page-wrapper'
 import { MainLayout } from './components/main-layout'
 
 function WelcomePage() {
@@ -71,6 +72,7 @@ function App({ currentUserId }: { currentUserId: string }) {
 
       <Route path="learner-dashboard" element={<LearnerDashboard/>} />
       <Route path="tutor-dashboard" element={<TutorDashboard/>} />
+      
 
       
       <Route element={<MainLayout/>}>
@@ -79,11 +81,9 @@ function App({ currentUserId }: { currentUserId: string }) {
         <Route path="/chats" element={<ChatPage currentUserId={currentUserId} />} />
         {/* <Route path="course-page" element={<CoursePage subject={""}/>} /> */}
         <Route path="/video/:matchId" element={<VideoChatWrapper />} /> 
-        <Route path="/tutor-dashboard/courses/math/:id" element={<CoursePage subject="math" />} />
-        <Route path="/tutor-dashboard/courses/science/:id" element={<CoursePage subject="science" />} />
-        <Route path="/tutor-dashboard/courses/english/:id" element={<CoursePage subject="english" />} />
-        <Route path="/tutor-dashboard/courses/filipino/:id" element={<CoursePage subject="filipino" />} />
+        <Route path="create-subject" element={<CreateSubject />} />
 
+        <Route path="courses/:subjectName/:subjectId"element={<CoursePageWrapper />} />
         <Route path="/join/:matchId" element={< VideoChatWrapper/>} />
       </Route>
 
