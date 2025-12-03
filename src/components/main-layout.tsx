@@ -8,10 +8,10 @@ export function MainLayout() {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-screen">
-        <AppSidebar />
+        <AppSidebar className="flex-shrink-0 w-64 min-w-0" />
 
         {/* Main content */}
-        <main className="flex-1 flex justify-center items-start p-4 overflow-auto">
+        <main className="flex-1 flex justify-center items-start p-4 overflow-auto min-w-0">
           <div className="w-full max-w-5xl">
             <Outlet />
           </div>
@@ -20,5 +20,6 @@ export function MainLayout() {
     </SidebarProvider>
   );
 }
+
 
 

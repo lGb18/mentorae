@@ -21,34 +21,34 @@ import { MainLayout } from './components/main-layout'
 function WelcomePage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
-      <div className="w-full max-w-xs bg-white border border-black rounded-sm p-8">
+      <div className="w-full max-w-md bg-white border border-black rounded-md p-10"> {/* increased width & padding */}
         {/* App Icon */}
-        <div className="flex justify-center mb-6">
-          <div className="w-24 h-12 bg-black rounded-sm flex items-center justify-center">
-            <span className="text-white font-large text-xs">Mentorae</span>
+        <div className="flex justify-center mb-8">
+          <div className="w-32 h-16 bg-black rounded-md flex items-center justify-center"> {/* larger icon */}
+            <span className="text-white font-semibold text-base">Mentorae</span> {/* larger text */}
           </div>
         </div>
 
         {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-lg font-medium text-black mb-1">Welcome</h1>
-          <p className="text-xs text-black font-light">
-              Continue to your account
+        <div className="text-center mb-10">
+          <h1 className="text-2xl font-semibold text-black mb-2">Welcome</h1> {/* larger heading */}
+          <p className="text-sm text-black font-light">
+            Continue to your account
           </p>
         </div>
 
-        {/* Action Buttons - Fixed alignment */}
-        <div className="space-y-3">
+        {/* Action Buttons */}
+        <div className="space-y-4">
           <Link
             to="/login"
-            className="w-full box-border bg-black text-white py-2.5 px-4 text-sm font-medium hover:bg-white hover:text-black transition-all duration-150 flex items-center justify-center border border-black rounded-sm"
+            className="w-full box-border bg-black text-white py-3 px-6 text-base font-medium hover:bg-white hover:text-black transition-all duration-150 flex items-center justify-center border border-black rounded-md"
           >
             Sign In
           </Link>
 
           <Link
             to="/register"
-            className="w-full box-border bg-white text-black py-2.5 px-4 text-sm font-medium hover:bg-black hover:text-white transition-all duration-150 flex items-center justify-center border border-black rounded-sm"
+            className="w-full box-border bg-white text-black py-3 px-6 text-base font-medium hover:bg-black hover:text-white transition-all duration-150 flex items-center justify-center border border-black rounded-md"
           >
             Create Account
           </Link>
@@ -58,6 +58,7 @@ function WelcomePage() {
     </div>
   )
 }
+
 
 function App({ currentUserId }: { currentUserId: string }) {
 

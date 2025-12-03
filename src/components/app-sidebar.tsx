@@ -129,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       {/* Main Nav */}
-      <SidebarContent className="py-3 flex-1 overflow-y-auto">
+      <SidebarContent className="py-3 flex-1 overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="w-full">
           <SidebarMenu className="w-full pl-0">
             {navMain.map((item, index) => (
@@ -140,7 +140,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <SidebarMenuItem className="w-full pl-0">
                   <CollapsibleTrigger asChild className="w-full">
-                    <SidebarMenuButton className="py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 w-full pl-3 pr-3 flex items-center gap-x-3 transition-colors rounded-md">
+                    <SidebarMenuButton className="py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 w-full pl-3 pr-3 flex items-center gap-x-3 transition-colors rounded-md max-w-[14rem] truncate">
                       <span className="truncate flex-1 text-left">{item.title}</span>
                       <Plus className="ml-auto size-4 flex-shrink-0 group-data-[state=open]/collapsible:hidden transition-transform duration-200" />
                       <Minus className="ml-auto size-4 flex-shrink-0 group-data-[state=closed]/collapsible:hidden transition-transform duration-200" />
@@ -151,28 +151,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <CollapsibleContent
                       className="w-full overflow-hidden transition-all duration-300 ease-out"
                     >
-                      <SidebarMenuSub className="mt-1 w-full pl-0">
+                     <SidebarMenuSub className="mt-1 w-full pl-0 overflow-hidden">
                         {item.items.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title} className="w-full pl-0">
                             <SidebarMenuSubButton
                               asChild
                               isActive={subItem.isActive}
-                              className="text-sm w-full pl-0"
+                              className="text-sm w-full"
                             >
                               <Link
                                 to={subItem.url}
-                                className={`py-3 transition-colors w-full block rounded-md ${
+                                className={`block py-2 px-3 rounded-md w-full truncate overflow-hidden whitespace-nowrap ${
                                   subItem.isActive
                                     ? "bg-gray-100 text-gray-900 font-medium"
                                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                 }`}
                               >
-                                <span className="truncate block">{subItem.title}</span>
+                                {subItem.title}
                               </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
                       </SidebarMenuSub>
+
+
                     </CollapsibleContent>
                   ) : null}
                 </SidebarMenuItem>
