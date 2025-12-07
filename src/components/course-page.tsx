@@ -107,6 +107,30 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   if (loading) return <p>Loading...</p>;
   if (!profile) return <p>Please login to access this material</p>;
 
+  const handleDeleteSubject = async () => {
+  if (!subjectId) return;
+
+  const confirmed = window.confirm(`Are you sure you want to delete "${subject}"?`);
+  if (!confirmed) return;
+
+  try {
+    const { error } = await supabase
+      .from("subjects")
+      .delete()
+      .eq("id", subjectId);
+
+    if (error) throw error;
+
+    alert(`Subject "${subject}" deleted successfully.`);
+    
+    window.location.href = "/tutor-dashboard";
+    window.location.reload();
+  } catch (err) {
+    console.error("Failed to delete subject:", err);
+    alert("Failed to delete subject. See console.");
+  }
+};
+
   return (
     <div className="p-4">
       <h1>{subject.toUpperCase()}</h1>
@@ -164,6 +188,12 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
               tutorId={profile.id}
             />
           )}
+          <button
+            className="bg-black-500 text-black px-3 py-1 rounded mt-2"
+            onClick={handleDeleteSubject}
+          >
+            Delete Subject
+          </button>
         </div>
       ) : (
         <div>
@@ -236,7 +266,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
             End Match
           </button>
         )}
-
+          
         </div>
       )}
     </div>

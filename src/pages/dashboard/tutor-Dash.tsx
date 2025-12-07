@@ -28,10 +28,33 @@ export default function TutorDashboard() {
     experience: "",
   })
   const [loading, setLoading] = useState(false)
-
+  
   useEffect(() => {
     loadProfile()
   }, [])
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("subjects")
+        .select("id, name")
+        .eq("tutor_id", user.id);
+
+      if (error) {
+        console.error("Fetch subjects error:", error);
+        return;
+      }
+
+      setSubjectsFromDB(data || []);
+    };
+
+    fetchSubjects();
+  }, []);
 
   async function loadProfile() {
     const {
@@ -64,26 +87,27 @@ export default function TutorDashboard() {
       }))
     }
   }
-
+  const [subjectsFromDB, setSubjectsFromDB] = useState<{ id: string; name: string }[]>([]);
+  
   const handleChange = (field: string, value: any) => {
     setProfile((prev: any) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubjectChange = (index: number, value: string) => {
-    const updated = [...profile.subjects_taught]
-    updated[index] = value
-    setProfile((prev: any) => ({ ...prev, subjects_taught: updated }))
-  }
+  // const handleSubjectChange = (index: number, value: string) => {
+  //   const updated = [...profile.subjects_taught]
+  //   updated[index] = value
+  //   setProfile((prev: any) => ({ ...prev, subjects_taught: updated }))
+  // }
 
-  const addSubject = () => {
-    setProfile((prev: any) => ({ ...prev, subjects_taught: [...prev.subjects_taught, ""] }))
-  }
+  // const addSubject = () => {
+  //   setProfile((prev: any) => ({ ...prev, subjects_taught: [...prev.subjects_taught, ""] }))
+  // }
 
-  const removeSubject = (index: number) => {
-    const updated = [...profile.subjects_taught]
-    updated.splice(index, 1)
-    setProfile((prev: any) => ({ ...prev, subjects_taught: updated }))
-  }
+  // const removeSubject = (index: number) => {
+  //   const updated = [...profile.subjects_taught]
+  //   updated.splice(index, 1)
+  //   setProfile((prev: any) => ({ ...prev, subjects_taught: updated }))
+  // }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -192,34 +216,20 @@ export default function TutorDashboard() {
 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-sm font-medium text-black mb-3 block">Subjects Preference</Label>
                     <div className="space-y-3">
-                      {profile.subjects_taught.map((subject: string, index: number) => (
-                        <div key={index} className="flex gap-3 items-center">
-                          <Input
-                            value={subject || ""}
-                            onChange={(e) => handleSubjectChange(index, e.target.value)}
-                            className="border-gray-300 focus:border-black focus:ring-black text-black flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => removeSubject(index)}
-                            className="border-gray-300 text-black hover:bg-gray-100 hover:border-black"
-                          >
-                            Remove
-                          </Button>
+                      <Label className="text-sm font-medium text-black mb-3 block">Subjects Taught</Label>
+
+                      {subjectsFromDB.map((subject: any) => (
+                        <div key={subject.id} className="flex items-center justify-between bg-gray-100 p-3 rounded-md">
+                          <span className="text-black">{subject.name}</span>
                         </div>
                       ))}
+
+                      {subjectsFromDB.length === 0 && (
+                        <p className="text-sm text-gray-500 italic">No subjects created yet.</p>
+                      )}
                     </div>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={addSubject}
-                      className="mt-4 border-gray-300 text-black hover:bg-gray-100 hover:border-black"
-                    >
-                      + Add Subject
-                    </Button>
+
                   </div>
 
                   <div className="space-y-3">
