@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { useSubjectsSync } from "@/hooks/sync-subjects"
 
 export default function TutorDashboard() {
   const [profile, setProfile] = useState<any>({
@@ -29,9 +30,12 @@ export default function TutorDashboard() {
   })
   const [loading, setLoading] = useState(false)
   
+  
+ 
   useEffect(() => {
     loadProfile()
   }, [])
+  useSubjectsSync(profile.id);
   useEffect(() => {
     const fetchSubjects = async () => {
       const {
@@ -92,6 +96,7 @@ export default function TutorDashboard() {
   const handleChange = (field: string, value: any) => {
     setProfile((prev: any) => ({ ...prev, [field]: value }))
   }
+  
 
   // const handleSubjectChange = (index: number, value: string) => {
   //   const updated = [...profile.subjects_taught]

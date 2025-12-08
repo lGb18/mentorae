@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 import SubjectEditor from "./subject-editor";
 import SubjectViewer from "./subject-viewer";
 import { endMatch } from "@/lib/match-table";
+import { useNavigate } from "react-router-dom";
 
 type Profile = {
   id: string;
@@ -22,7 +23,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   const [hasContent, setHasContent] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState("1");
   const [matchedTutorId, setMatchedTutorId] = useState<string | null>(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
@@ -108,59 +109,64 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   if (!profile) return <p>Please login to access this material</p>;
 
   const handleDeleteSubject = async () => {
-  if (!subjectId) return;
+    if (!subjectId) return;
 
-  const confirmed = window.confirm(`Are you sure you want to delete "${subject}"?`);
-  if (!confirmed) return;
+    const confirmed = window.confirm(`Are you sure you want to delete "${subject}"?`);
+    if (!confirmed) return;
 
-  try {
-    const { error } = await supabase
-      .from("subjects")
-      .delete()
-      .eq("id", subjectId);
+    try {
+      // 1. Delete the subject
+      const { error: deleteError } = await supabase
+        .from("subjects")
+        .delete()
+        .eq("id", subjectId);
 
-    if (error) throw error;
+      if (deleteError) throw deleteError;
 
-    alert(`Subject "${subject}" deleted successfully.`);
-    
-    window.location.href = "/tutor-dashboard";
-    window.location.reload();
-  } catch (err) {
-    console.error("Failed to delete subject:", err);
-    alert("Failed to delete subject. See console.");
-  }
-};
+      // 2. Update subjects_taught in tutor profile
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) throw new Error("Tutor session not found");
+      const tutorId = session.user.id;
+
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("subjects_taught")
+        .eq("id", tutorId)
+        .single();
+
+      const current = Array.isArray(profileRow?.subjects_taught) ? profileRow.subjects_taught : [];
+      const updated = current.filter((s) => s !== subject);
+
+      await supabase
+        .from("profiles")
+        .update({ subjects_taught: updated })
+        .eq("id", tutorId);
+
+      alert(`Subject "${subject}" deleted successfully.`);
+
+      // 3. Navigate to Create Subject page
+      navigate("/create-subject");
+    } catch (err) {
+      console.error("Failed to delete subject:", err);
+      alert("Failed to delete subject. See console.");
+    }
+  };
 
   return (
-    <div className="p-4">
-      <h1>{subject.toUpperCase()}</h1>
+  <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <h1 className="text-2xl font-bold text-black tracking-tight">{subject.toUpperCase()}</h1>
 
-      {/* Debug info
-      <div style={{ 
-        background: '#f5f5f5', 
-        padding: '10px', 
-        marginBottom: '10px', 
-        borderRadius: '5px',
-        fontSize: '14px'
-      }}>
-        <strong>Debug Info:</strong><br />
-        Role: {profile.role}<br />
-        Selected Grade: {selectedGrade}<br />
-        Matched Tutor: {matchedTutorId || 'None'}<br />
-        Has Content: {hasContent ? 'Yes' : 'No'}<br />
-        Subject: {subject}
-      </div> */}
+    {profile.role === "teacher" ? (
+      <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
+        <p className="text-black font-medium">Welcome, {profile.display_name}</p>
 
-      {profile.role === "teacher" ? (
-        <div>
-          <p>Welcome, {profile.display_name}</p>
-
-          {/* Grade selector - now using DB format */}
-          <label className="mr-2">Select Level:</label>
+        {/* Grade selector */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-black">Select Level:</label>
           <select
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
-            className="border px-2 py-1 rounded mb-2"
+            className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
           >
             <option value="1">Grade 1</option>
             <option value="2">Grade 2</option>
@@ -169,42 +175,46 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
             <option value="5">Grade 5</option>
             <option value="6">Grade 6</option>
           </select>
+        </div>
 
-          {/* Create content button */}
+        {/* Actions */}
+        <div className="flex flex-wrap gap-3 mt-2">
           {!hasContent && (
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
               onClick={handleCreateContent}
             >
               Create Subject Content
             </button>
           )}
-
-          {/* Show editor if content exists */}
           {hasContent && (
-            <SubjectEditor
-              subjectName={subject}
-              gradeLevel={`Grade ${selectedGrade}`} // Pass "Grade 5" format
-              tutorId={profile.id}
-            />
+            <div className="w-full">
+              <SubjectEditor
+                subjectName={subject}
+                gradeLevel={`Grade ${selectedGrade}`}
+                tutorId={profile.id}
+              />
+            </div>
           )}
+
           <button
-            className="bg-black-500 text-black px-3 py-1 rounded mt-2"
+            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
             onClick={handleDeleteSubject}
           >
             Delete Subject
           </button>
         </div>
-      ) : (
-        <div>
-          <p>Welcome, {profile.display_name} (Student)</p>
-          
-          {/* Grade selector for students - now using DB format */}
-          <label className="mr-2">Select Grade:</label>
+      </div>
+    ) : (
+      <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
+        <p className="text-black font-medium">Welcome, {profile.display_name} (Student)</p>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-black">Select Grade:</label>
           <select
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
-            className="border px-2 py-1 rounded mb-2"
+            className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
           >
             <option value="1">Grade 1</option>
             <option value="2">Grade 2</option>
@@ -213,50 +223,46 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
             <option value="5">Grade 5</option>
             <option value="6">Grade 6</option>
           </select>
+        </div>
 
-          {!matchedTutorId ? (
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-              <p>No tutor assigned for {subject.toUpperCase()} - Grade {selectedGrade}.</p>
-            </div>
-          ) : !hasContent ? (
-            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-              <p>Your tutor hasn't created content for {subject} - Grade {selectedGrade} yet.</p>
-              <p>Please check back later or contact your tutor.</p>
-            </div>
-          ) : (
-            <SubjectViewer 
-              subjectId={subject} 
-              gradeLevel={`Grade ${selectedGrade}`}
-            />
-          )}
-          {matchedTutorId && profile?.id && (
+        {/* Status messages */}
+        {!matchedTutorId ? (
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+            <p>No tutor assigned for {subject.toUpperCase()} - Grade {selectedGrade}.</p>
+          </div>
+        ) : !hasContent ? (
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+            <p>Your tutor hasn't created content for {subject} - Grade {selectedGrade} yet.</p>
+            <p>Please check back later or contact your tutor.</p>
+          </div>
+        ) : (
+          <SubjectViewer 
+            subjectId={subject} 
+            gradeLevel={`Grade ${selectedGrade}`}
+          />
+        )}
+
+        {matchedTutorId && profile?.id && (
           <button
-            className="bg-black-500 text-black px-4 py-2 rounded mt-2"
+            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
             onClick={async () => {
               try {
-                // Fetch only the active match, latest first
                 const { data: matches, error } = await supabase
                   .from("matches")
                   .select("*")
                   .eq("student_id", profile.id)
                   .eq("tutor_id", matchedTutorId)
-                  .eq("status", "active")          // only active
+                  .eq("status", "active")
                   .order("created_at", { ascending: false })
-                  .limit(1);                        // only one row
+                  .limit(1);
 
-                if (error) {
-                  console.error("Failed to fetch match before ending:", error);
-                  return;
-                }
+                if (error) throw error;
 
                 if (matches && matches.length > 0) {
                   const match = matches[0];
                   await endMatch(match.id);
                   setMatchedTutorId(null);
                   setHasContent(false);
-                  console.log("Match ended:", match.id);
-                } else {
-                  console.warn("No active match found for IDs", { profileId: profile.id, matchedTutorId });
                 }
               } catch (err) {
                 console.error("Error ending match:", err);
@@ -266,9 +272,9 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
             End Match
           </button>
         )}
-          
-        </div>
-      )}
-    </div>
-  )
+      </div>
+    )}
+  </div>
+)
+
 }
