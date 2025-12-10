@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useNavigate } from "react-router-dom"
 
@@ -8,7 +8,8 @@ export default function Matchmaking() {
   const [profile, setProfile] = useState<any>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
   const navigate = useNavigate()
-  
+  const pollingRef = useRef<number | null>(null)
+
   // 🔍 MAIN MATCH FUNCTION
   const findMatch = async () => {
     setLoading(true)
@@ -34,7 +35,6 @@ export default function Matchmaking() {
 
     setProfile(p)
 
-    // Determine subjects based on role
     let subjects: string[] = []
     if (p.role === "student" && Array.isArray(p.subjects_needed)) {
       subjects = p.subjects_needed.filter(Boolean)
@@ -42,7 +42,6 @@ export default function Matchmaking() {
       subjects = p.subjects_taught.filter(Boolean)
     }
 
-    // Safe insert payload
     const payload = {
       user_id: p.id,
       role: p.role,
@@ -66,18 +65,17 @@ export default function Matchmaking() {
     }
 
     setRequestId(req.id)
+
     const { data: existing } = await supabase
       .from("match_requests")
       .select("*")
       .eq("status", "searching")
       .eq("role", p.role === "student" ? "teacher" : "student")
-        .contains("subjects", [payload.subjects[0]]) // <-- safer array match
-      // .ilike('subjects', `%${payload.subjects[0]}%`)
+      .contains("subjects", [payload.subjects[0]])
       .order("created_at", { ascending: false })
-    .limit(1)                                  
-    .maybeSingle(); 
+      .limit(1)
+      .maybeSingle()
 
-    //If found, create a match
     if (existing) {
       const subject =
         Array.isArray(subjects) && subjects.length > 0 ? subjects[0] : "General"
@@ -86,7 +84,7 @@ export default function Matchmaking() {
         {
           student_id: p.role === "student" ? p.id : existing.user_id,
           tutor_id: p.role === "teacher" ? p.id : existing.user_id,
-          subject, // ✅ singular column
+          subject,
           grade_level: p.grade_level ?? "unspecified",
           status: "active",
         },
@@ -94,55 +92,67 @@ export default function Matchmaking() {
 
       if (matchError) console.error("Match creation error:", matchError)
 
-      // Update both to matched
       await supabase
         .from("match_requests")
         .update({ status: "matched" })
         .in("id", [req.id, existing.id])
     }
-    // Poll for matches every 3s
-    const interval = setInterval(async () => {
-  const { data: matchData } = await supabase
-    .from("matches")
-    .select("*")
-    .or(`student_id.eq.${p.id},tutor_id.eq.${p.id}`)
-    .order("created_at", { ascending: false })
-    .limit(1);
 
-  const activeMatch =
-    matchData && matchData.length > 0
-      ? matchData.find((m) => m.status === "active" || m.status === "pending")
-      : null;
-
-  if (activeMatch) {
-    setMatch(activeMatch);
-    clearInterval(interval);
-    setLoading(false);
-  }
-
-  console.log("Polling matches for user:", p.id, "→ found:", matchData);
-}, 3000);
-
-  }
-
-  // ❌ CANCEL MATCH
-  const cancelMatch = async () => {
-    if (requestId) {
-      await supabase
-        .from("match_requests")
-        .update({ status: "cancelled" })
-        .eq("id", requestId)
-      setRequestId(null)
-    }
-    if (match) {
-      await supabase
+    // Poll every 3s
+    pollingRef.current = window.setInterval(async () => {
+      const { data: matchData } = await supabase
         .from("matches")
-        .update({ status: "cancelled" })
-        .eq("id", match.id)
-      setMatch(null)
-    }
-    setLoading(false)
+        .select("*")
+        .or(`student_id.eq.${p.id},tutor_id.eq.${p.id}`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+
+      const activeMatch =
+        matchData && matchData.length > 0
+          ? matchData.find(m => m.status === "active" || m.status === "pending")
+          : null
+
+      if (activeMatch) {
+        setMatch(activeMatch)
+
+        if (pollingRef.current !== null) {
+          clearInterval(pollingRef.current)
+          pollingRef.current = null
+        }
+
+        setLoading(false)
+      }
+
+      console.log("Polling matches for user:", p.id, "→ found:", matchData)
+    }, 3000)
   }
+
+
+  //  CANCEL MATCH
+  const cancelMatch = async () => {
+  if (pollingRef.current) {
+    clearInterval(pollingRef.current)
+    pollingRef.current = null
+  }
+
+  if (requestId) {
+    await supabase
+      .from("match_requests")
+      .update({ status: "cancelled" })
+      .eq("id", requestId)
+    setRequestId(null)
+  }
+
+  if (match) {
+    await supabase
+      .from("matches")
+      .update({ status: "cancelled" })
+      .eq("id", match.id)
+    setMatch(null)
+  }
+
+  setLoading(false)
+}
 
   //  ACCEPT MATCH
   const acceptMatch = async () => {
