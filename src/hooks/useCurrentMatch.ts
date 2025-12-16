@@ -12,7 +12,7 @@ export function useCurrentMatch() {
         .from("matches")
         .select("id")
         .eq("status", "active")
-        .single();
+        .maybeSingle();
 
       if (matchData?.id) setMatchId(matchData.id);
     };

@@ -50,6 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     fetchSubjects();
   }, [userId]);
 
+  // --- Updated navMain Array ---
   const navMain = [
     {
       title: "Profile",
@@ -78,6 +79,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: `/courses/${s.name}/${s.id}`,
           isActive: false,
         })),
+        // --- NEW ITEMS ---
+        // {
+        //   title: "Create Quiz",
+        //   url: "/create-quiz",
+        //   isActive: false,
+        // },
+        // {
+        //   title: "My Quizzes",
+        //   url: "/my-quizzes",
+        //   isActive: false,
+        // },
       ],
     },
     {

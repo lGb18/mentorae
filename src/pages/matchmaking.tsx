@@ -10,7 +10,7 @@ export default function Matchmaking() {
   const navigate = useNavigate()
   const pollingRef = useRef<number | null>(null)
 
-  // 🔍 MAIN MATCH FUNCTION
+  //  MAIN MATCH FUNCTION
   const findMatch = async () => {
     setLoading(true)
 
@@ -191,7 +191,7 @@ export default function Matchmaking() {
       supabase.removeChannel(channel)
     }
   }, [match?.id])
-  // 🔁 AUTO-REDIRECT WHEN CONFIRMED
+  //  AUTO-REDIRECT WHEN CONFIRMED
   useEffect(() => {
     if (isConfirmed && match) {
       const timer = setTimeout(() => {
@@ -330,8 +330,8 @@ return (
             <p><span className="font-medium">Subject:</span> {match.subject}</p>
             <p><span className="font-medium">Grade Level:</span> {match.grade_level}</p>
             <p><span className="font-medium">Match Status:</span> {match.status}</p>
-            <p><span className="font-medium">Student Confirmed:</span> {match.student_confirmed ? '✅' : '❌'}</p>
-            <p><span className="font-medium">Tutor Confirmed:</span> {match.tutor_confirmed ? '✅' : '❌'}</p>
+            <p><span className="font-medium">Student Confirmed:</span> {match.student_confirmed ? '🟢' : '🔴'}</p>
+            <p><span className="font-medium">Tutor Confirmed:</span> {match.tutor_confirmed ? '🟢' : '🔴'}</p>
             <p><span className="font-medium">Your Role:</span> {profile?.role}</p>
           </div>
 
