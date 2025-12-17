@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+
 import { Link } from "react-router-dom";
 import { Plus, Minus, LogOut, GalleryVerticalEnd } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,38 +20,120 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import SidebarUser from "./sidebar-user";
 import { supabase } from "@/lib/supabaseClient";
 import { useCurrentMatch } from "@/hooks/useCurrentMatch";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react"
+
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const matchId = useCurrentMatch(); // get current matchId dynamically
-  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
+  const matchId = useCurrentMatch()
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  // ✅ Track mounted state
+  const isMounted = useRef(true)
+  
+  // ✅ Cache to prevent redundant fetches
+  const hasFetchedSubjects = useRef(false)
 
-  // Fetch current user ID
+  // ✅ Cleanup on unmount
   useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  // ✅ Fetch user once and memoize
+  useEffect(() => {
+    let mounted = true
+    
     async function fetchUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) setUserId(session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (mounted && session?.user?.id) {
+          setUserId(session.user.id)
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error)
+      } finally {
+        if (mounted) setIsLoading(false)
+      }
     }
-    fetchUser();
-  }, []);
+    
+    fetchUser()
+    
+    return () => {
+      mounted = false
+    }
+  }, [])
 
-  // Fetch tutor-owned subjects
+  // ✅ Fetch subjects only once when userId changes
   useEffect(() => {
-    if (!userId) return;
-
+    if (!userId || hasFetchedSubjects.current) return
+    
+    let mounted = true
+    
     async function fetchSubjects() {
-      const { data } = await supabase
-        .from("subjects")
-        .select("*")
-        .eq("tutor_id", userId);
-      setSubjects(data || []);
+      try {
+        const { data, error } = await supabase
+          .from("subjects")
+          .select("id, name")
+          .eq("tutor_id", userId)
+        
+        if (error) throw error
+        
+        if (mounted && data) {
+          setSubjects(data)
+          hasFetchedSubjects.current = true
+        }
+      } catch (error) {
+        console.error("Error fetching subjects:", error)
+      }
     }
 
-    fetchSubjects();
-  }, [userId]);
+    fetchSubjects()
+    
+    return () => {
+      mounted = false
+    }
+  }, [userId])
 
-  // --- Updated navMain Array ---
-  const navMain = [
+  // ✅ Subscribe to realtime changes for subjects
+  useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel('subjects-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subjects',
+          filter: `tutor_id=eq.${userId}`
+        },
+        (payload) => {
+          if (!isMounted.current) return
+          
+          if (payload.eventType === 'INSERT') {
+            setSubjects(prev => [...prev, payload.new as any])
+          } else if (payload.eventType === 'DELETE') {
+            setSubjects(prev => prev.filter(s => s.id !== payload.old.id))
+          } else if (payload.eventType === 'UPDATE') {
+            setSubjects(prev => prev.map(s => 
+              s.id === payload.new.id ? payload.new as any : s
+            ))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId])
+
+  // ✅ Memoize navMain to prevent recreation
+  const navMain = useMemo(() => [
     {
       title: "Profile",
       url: "#",
@@ -79,17 +161,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: `/courses/${s.name}/${s.id}`,
           isActive: false,
         })),
-        // --- NEW ITEMS ---
-        // {
-        //   title: "Create Quiz",
-        //   url: "/create-quiz",
-        //   isActive: false,
-        // },
-        // {
-        //   title: "My Quizzes",
-        //   url: "/my-quizzes",
-        //   isActive: false,
-        // },
       ],
     },
     {
@@ -111,13 +182,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "About", url: "#" },
       ],
     },
-  ];
+  ], [subjects, matchId])
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error("Error signing out:", error.message);
-    else window.location.href = "/";
-  };
+  // ✅ Memoize sign out handler
+  const handleSignOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error("Error signing out:", error.message)
+    } else {
+      window.location.href = "/"
+    }
+  }, [])
+
+  // ✅ Show loading state
+  if (isLoading) {
+    return (
+      <Sidebar {...props} className="bg-white border-r border-gray-200">
+        <SidebarContent className="flex items-center justify-center h-full">
+          <div className="text-sm text-gray-500">Loading...</div>
+        </SidebarContent>
+      </Sidebar>
+    )
+  }
 
   return (
     <Sidebar {...props} className="bg-white border-r border-gray-200">
@@ -160,10 +246,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </CollapsibleTrigger>
 
                   {item.items?.length ? (
-                    <CollapsibleContent
-                      className="w-full overflow-hidden transition-all duration-300 ease-out"
-                    >
-                     <SidebarMenuSub className="mt-1 w-full pl-0 overflow-hidden">
+                    <CollapsibleContent className="w-full overflow-hidden transition-all duration-300 ease-out">
+                      <SidebarMenuSub className="mt-1 w-full pl-0 overflow-hidden">
                         {item.items.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title} className="w-full pl-0">
                             <SidebarMenuSubButton
@@ -185,8 +269,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           </SidebarMenuSubItem>
                         ))}
                       </SidebarMenuSub>
-
-
                     </CollapsibleContent>
                   ) : null}
                 </SidebarMenuItem>
@@ -211,5 +293,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarRail />
     </Sidebar>
-  );
+  )
 }

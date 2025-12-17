@@ -1,61 +1,73 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 
 type SubjectViewerProps = {
-  subjectId: string // can be UUID or subject name
+  subjectId: string
   gradeLevel: string
 }
 
 export default function SubjectViewer({ subjectId, gradeLevel }: SubjectViewerProps) {
   const [content, setContent] = useState("")
   const [resolvedId, setResolvedId] = useState<string | null>(null)
+  const isMounted = useRef(true)
 
+  // ✅ Cleanup
   useEffect(() => {
-    
-    const resolveSubjectId = async () => {
-      if (subjectId.includes("-")) {
-        
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  // ✅ Memoize resolver
+  const resolveSubjectId = useCallback(async () => {
+    if (subjectId.includes("-")) {
+      if (isMounted.current) {
         setResolvedId(subjectId)
-      } else {
-        const { data, error } = await supabase
-          .from("subjects")
-          .select("id")
-          .eq("name", subjectId)
-          .single()
-        if (!error && data) setResolvedId(data.id)
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("subjects")
+        .select("id")
+        .eq("name", subjectId)
+        .single()
+      
+      if (!error && data && isMounted.current) {
+        setResolvedId(data.id)
       }
     }
-    resolveSubjectId()
   }, [subjectId])
 
   useEffect(() => {
-    const fetchContent = async () => {
-      console.log("🎯 SubjectViewer Props:", { subjectId, gradeLevel });
-      if (!resolvedId) return
-      console.log("SubjectViewer fetching content for:", {
-      subject_id: resolvedId,
-      grade_level: gradeLevel
-    });
-      const { data, error } = await supabase
-        .from("subject_content")
-        .select("content")
-        .eq("subject_id", resolvedId)
-        .eq("grade_level", gradeLevel)
-        .single()
+    resolveSubjectId()
+  }, [resolveSubjectId])
 
-       if (error) {
-        
-        if (error.code === "PGRST116") {
-          setContent("No tutor has been assigned yet.")
-        } else {
-          console.error("Error loading content:", error)
-        }
+  // ✅ Memoize fetch
+  const fetchContent = useCallback(async () => {
+    if (!resolvedId) return
+
+    const { data, error } = await supabase
+      .from("subject_content")
+      .select("content")
+      .eq("subject_id", resolvedId)
+      .eq("grade_level", gradeLevel)
+      .single()
+
+    if (!isMounted.current) return
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        setContent("No tutor has been assigned yet.")
       } else {
-        setContent(data?.content || "")
+        console.error("Error loading content:", error)
       }
+    } else {
+      setContent(data?.content || "")
     }
-    fetchContent()
   }, [resolvedId, gradeLevel])
+
+  useEffect(() => {
+    fetchContent()
+  }, [fetchContent])
   
   return (
     <div

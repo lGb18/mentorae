@@ -5,6 +5,16 @@ import SubjectViewer from "./subject-viewer";
 import SubjectQuizzesTab from "./assessment/subject-quizzes-tab";
 import { endMatch } from "@/lib/match-table";
 import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 type Profile = {
   id: string;
@@ -155,152 +165,162 @@ export default function CoursePage({ subject, subjectId, children }: CoursePageP
   if (loading) return <p>Loading...</p>;
   if (!profile) return <p>Please login to access this material</p>;
 
-  return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-black tracking-tight">{subject.toUpperCase()}</h1>
+ return (
+  <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-black tracking-tight">
+        {subject.toUpperCase()}
+      </h1>
+      
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="h-5 w-5" />
+          </Button>
+        </DropdownMenuTrigger>
 
-      {profile.role === "teacher" ? (
-        <div className="space-y-6">
-          {/* Teacher Section with grade selector and actions */}
-          <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
-            <p className="text-black font-medium">Welcome, {profile.display_name}</p>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => navigate("quizzes")}>
+            Quizzes
+          </DropdownMenuItem>
 
-            {/* Grade selector */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-black">Select Level:</label>
-              <select
-                value={selectedGrade}
-                onChange={(e) => setSelectedGrade(e.target.value)}
-                className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
-              >
-                <option value="1">Grade 1</option>
-                <option value="2">Grade 2</option>
-                <option value="3">Grade 3</option>
-                <option value="4">Grade 4</option>
-                <option value="5">Grade 5</option>
-                <option value="6">Grade 6</option>
-              </select>
-            </div>
+          {profile.role === "teacher" && (
+            <DropdownMenuItem onClick={() => navigate("quizzes/new")}>
+              Create Quiz
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
 
-            {/* Content actions */}
-            <div className="flex flex-wrap gap-3 mt-2">
-              {!hasContent ? (
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                  onClick={handleCreateContent}
-                >
-                  Create Subject Content
-                </button>
-              ) : (
-                <div className="w-full">
-                  <SubjectEditor
-                    subjectName={subject}
-                    gradeLevel={`Grade ${selectedGrade}`}
-                    tutorId={profile.id}
-                  />
-                </div>
-              )}
+    {profile.role === "teacher" ? (
+      <div className="space-y-6">
+        {/* Teacher Section with grade selector and actions */}
+        <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
+          <p className="text-black font-medium">Welcome, {profile.display_name}</p>
 
-              <button
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
-                onClick={handleDeleteSubject}
-              >
-                Delete Subject
-              </button>
-            </div>
+          {/* Grade selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-black">Select Level:</label>
+            <select
+              value={selectedGrade}
+              onChange={(e) => setSelectedGrade(e.target.value)}
+              className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
+            >
+              <option value="1">Grade 1</option>
+              <option value="2">Grade 2</option>
+              <option value="3">Grade 3</option>
+              <option value="4">Grade 4</option>
+              <option value="5">Grade 5</option>
+              <option value="6">Grade 6</option>
+            </select>
           </div>
 
-          {/* Quizzes Tab */}
-          <div className="bg-white border rounded-lg p-4 shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">Quizzes</h3>
-            <SubjectQuizzesTab subjectId={subjectId} isTutor />
+          {/* Content actions */}
+          <div className="flex flex-wrap gap-3">
+            {!hasContent ? (
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+                onClick={handleCreateContent}
+              >
+                Create Subject Content
+              </button>
+            ) : (
+              <div className="w-full">
+                <SubjectEditor
+                  subjectName={subject}
+                  gradeLevel={`Grade ${selectedGrade}`}
+                  tutorId={profile.id}
+                />
+              </div>
+            )}
+
+            <button
+              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
+              onClick={handleDeleteSubject}
+            >
+              Delete Subject
+            </button>
           </div>
         </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Student Section */}
-          <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
-            <p className="text-black font-medium">Welcome, {profile.display_name} (Student)</p>
+      </div>
+    ) : (
+      <div className="space-y-6">
+        {/* Student Section */}
+        <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
+          <p className="text-black font-medium">Welcome, {profile.display_name} (Student)</p>
 
-            {/* Grade selector */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-black">Select Grade:</label>
-              <select
-                value={selectedGrade}
-                onChange={(e) => setSelectedGrade(e.target.value)}
-                className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
-              >
-                <option value="1">Grade 1</option>
-                <option value="2">Grade 2</option>
-                <option value="3">Grade 3</option>
-                <option value="4">Grade 4</option>
-                <option value="5">Grade 5</option>
-                <option value="6">Grade 6</option>
-              </select>
-            </div>
-
-            {/* Status messages */}
-            {!matchedTutorId ? (
-              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-                <p>No tutor assigned for {subject.toUpperCase()} - Grade {selectedGrade}.</p>
-              </div>
-            ) : !hasContent ? (
-              <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-                <p>Your tutor hasn't created content for {subject} - Grade {selectedGrade} yet.</p>
-                <p>Please check back later or contact your tutor.</p>
-              </div>
-            ) : (
-              <SubjectViewer 
-                subjectId={subjectId}
-                gradeLevel={`Grade ${selectedGrade}`}
-              />
-            )}
-
-            {/* End Match button */}
-            {matchedTutorId && profile?.id && (
-              <button
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
-                onClick={async () => {
-                  try {
-                    const { data: matches, error } = await supabase
-                      .from("matches")
-                      .select("*")
-                      .eq("student_id", profile.id)
-                      .eq("tutor_id", matchedTutorId)
-                      .eq("status", "active")
-                      .order("created_at", { ascending: false })
-                      .limit(1);
-
-                    if (error) throw error;
-
-                    if (matches && matches.length > 0) {
-                      const match = matches[0];
-                      await endMatch(match.id);
-                      setMatchedTutorId(null);
-                      setHasContent(false);
-                    }
-                  } catch (err) {
-                    console.error("Error ending match:", err);
-                  }
-                }}
-              >
-                End Match
-              </button>
-            )}
+          {/* Grade selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-black">Select Grade:</label>
+            <select
+              value={selectedGrade}
+              onChange={(e) => setSelectedGrade(e.target.value)}
+              className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
+            >
+              <option value="1">Grade 1</option>
+              <option value="2">Grade 2</option>
+              <option value="3">Grade 3</option>
+              <option value="4">Grade 4</option>
+              <option value="5">Grade 5</option>
+              <option value="6">Grade 6</option>
+            </select>
           </div>
-
-          {/* Student Quizzes */}
-          {matchedTutorId && (
-            <div className="bg-white border rounded-lg p-4 shadow-sm">
-              <h3 className="text-lg font-semibold mb-2">Available Quizzes</h3>
-              <SubjectQuizzesTab subjectId={subjectId} />
+          
+          {/* Status messages */}
+          {!matchedTutorId ? (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              <p>No tutor assigned for {subject.toUpperCase()} - Grade {selectedGrade}.</p>
             </div>
+          ) : !hasContent ? (
+            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+              <p>Your tutor hasn't created content for {subject} - Grade {selectedGrade} yet.</p>
+              <p>Please check back later or contact your tutor.</p>
+            </div>
+          ) : (
+            <SubjectViewer 
+              subjectId={subjectId}
+              gradeLevel={`Grade ${selectedGrade}`}
+            />
+          )}
+
+          {/* End Match button */}
+          {matchedTutorId && profile?.id && (
+            <button
+              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
+              onClick={async () => {
+                try {
+                  const { data: matches, error } = await supabase
+                    .from("matches")
+                    .select("*")
+                    .eq("student_id", profile.id)
+                    .eq("tutor_id", matchedTutorId)
+                    .eq("status", "active")
+                    .order("created_at", { ascending: false })
+                    .limit(1);
+
+                  if (error) throw error;
+
+                  if (matches && matches.length > 0) {
+                    const match = matches[0];
+                    await endMatch(match.id);
+                    setMatchedTutorId(null);
+                    setHasContent(false);
+                  }
+                } catch (err) {
+                  console.error("Error ending match:", err);
+                }
+              }}
+            >
+              End Match
+            </button>
           )}
         </div>
-      )}
-      
-      {/* Nested routes outlet */}
-      {children}
-    </div>
-  );
+      </div>
+    )}
+    
+    {/* Nested routes outlet */}
+    {children}
+  </div>
+);
 }
