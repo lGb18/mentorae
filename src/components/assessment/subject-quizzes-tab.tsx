@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/lib/supabaseClient"
-import { Plus, MoreVertical, CheckCircle, Clock, Trash2 } from "lucide-react"
+import { Plus, MoreVertical, CheckCircle, Clock, Trash2, PlayCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -34,8 +34,15 @@ export default function SubjectQuizzesTab({
   const [quizzes, setQuizzes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [bulkLoading, setBulkLoading] = useState(false)
+  const isMounted = useRef(true)
 
-  const fetchQuizzes = async () => {
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  const fetchQuizzes = useCallback(async () => {
     setLoading(true)
 
     let query = supabase
@@ -50,15 +57,18 @@ export default function SubjectQuizzesTab({
     }
 
     const { data } = await query
-    setQuizzes(data || [])
-    setLoading(false)
-  }
+    
+    if (isMounted.current) {
+      setQuizzes(data || [])
+      setLoading(false)
+    }
+  }, [subjectId, isTutor])
 
   useEffect(() => {
     fetchQuizzes()
-  }, [subjectId, isTutor])
+  }, [fetchQuizzes])
 
-  const togglePublish = async (quizId: string, currentStatus: boolean) => {
+  const togglePublish = useCallback(async (quizId: string, currentStatus: boolean) => {
     if (
       !confirm(
         `Are you sure you want to ${currentStatus ? "unpublish" : "publish"} this quiz?`
@@ -77,9 +87,9 @@ export default function SubjectQuizzesTab({
     } else {
       fetchQuizzes()
     }
-  }
+  }, [fetchQuizzes])
 
-  const deleteQuiz = async (quizId: string, quizTitle: string) => {
+  const deleteQuiz = useCallback(async (quizId: string, quizTitle: string) => {
     if (
       !confirm(
         `Are you sure you want to delete "${quizTitle}"? This action cannot be undone.`
@@ -111,9 +121,9 @@ export default function SubjectQuizzesTab({
     } else {
       fetchQuizzes()
     }
-  }
+  }, [fetchQuizzes])
 
-  const bulkPublishAll = async () => {
+  const bulkPublishAll = useCallback(async () => {
     if (!confirm("Are you sure you want to publish all drafts?")) return
 
     setBulkLoading(true)
@@ -139,7 +149,7 @@ export default function SubjectQuizzesTab({
     }
 
     setBulkLoading(false)
-  }
+  }, [quizzes, fetchQuizzes])
 
   return (
     <div className="space-y-6">
@@ -157,7 +167,7 @@ export default function SubjectQuizzesTab({
         {/* Tutor-only actions */}
         {isTutor && (
           <div className="flex gap-2">
-            <Button onClick={() => navigate(`new`)}>
+            <Button onClick={() => navigate("new")}>
               <Plus className="mr-2 h-4 w-4" />
               Create Quiz
             </Button>
@@ -166,7 +176,7 @@ export default function SubjectQuizzesTab({
               onClick={bulkPublishAll}
               disabled={bulkLoading}
             >
-              Publish All Drafts
+              {bulkLoading ? "Publishing..." : "Publish All Drafts"}
             </Button>
           </div>
         )}
@@ -180,7 +190,7 @@ export default function SubjectQuizzesTab({
               <TableHead>Title</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
-              {isTutor && <TableHead className="text-right">Actions</TableHead>}
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -188,7 +198,7 @@ export default function SubjectQuizzesTab({
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={isTutor ? 4 : 3}
+                  colSpan={4}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Loading quizzes…
@@ -197,10 +207,12 @@ export default function SubjectQuizzesTab({
             ) : quizzes.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={isTutor ? 4 : 3}
+                  colSpan={4}
                   className="h-32 text-center text-muted-foreground"
                 >
-                  No quizzes available.
+                  {isTutor 
+                    ? "No quizzes created yet. Click 'Create Quiz' to get started."
+                    : "No quizzes available yet."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -226,9 +238,9 @@ export default function SubjectQuizzesTab({
                     {new Date(quiz.created_at).toLocaleDateString()}
                   </TableCell>
 
-                  {/* Tutor-only actions */}
-                  {isTutor && (
-                    <TableCell className="text-right">
+                  <TableCell className="text-right">
+                    {isTutor ? (
+                      // Teacher Actions
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -237,29 +249,19 @@ export default function SubjectQuizzesTab({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() =>
-                              navigate(
-                                `${quiz.id}/edit`
-                              )
-                            }
+                            onClick={() => navigate(`${quiz.id}/edit`)}
                           >
                             Edit
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
-                            onClick={() =>
-                              navigate(
-                                `${quiz.id}/results`
-                              )
-                            }
+                            onClick={() => navigate(`${quiz.id}/results`)}
                           >
                             View Results
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
-                            onClick={() =>
-                              togglePublish(quiz.id, quiz.is_published)
-                            }
+                            onClick={() => togglePublish(quiz.id, quiz.is_published)}
                           >
                             {quiz.is_published ? "Unpublish" : "Publish"}
                           </DropdownMenuItem>
@@ -267,9 +269,7 @@ export default function SubjectQuizzesTab({
                           <DropdownMenuSeparator />
 
                           <DropdownMenuItem
-                            onClick={() =>
-                              deleteQuiz(quiz.id, quiz.title)
-                            }
+                            onClick={() => deleteQuiz(quiz.id, quiz.title)}
                             className="text-destructive focus:text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -277,8 +277,17 @@ export default function SubjectQuizzesTab({
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  )}
+                    ) : (
+                      // Student Actions
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`${quiz.id}/take`)}
+                      >
+                        <PlayCircle className="mr-2 h-4 w-4" />
+                        Take Quiz
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}

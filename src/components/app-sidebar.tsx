@@ -27,22 +27,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const matchId = useCurrentMatch()
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
   const [userId, setUserId] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
-  // ✅ Track mounted state
   const isMounted = useRef(true)
-  
-  // ✅ Cache to prevent redundant fetches
   const hasFetchedSubjects = useRef(false)
 
-  // ✅ Cleanup on unmount
   useEffect(() => {
     return () => {
       isMounted.current = false
     }
   }, [])
 
-  // ✅ Fetch user once and memoize
+  // Fetch user and role
   useEffect(() => {
     let mounted = true
     
@@ -51,6 +48,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         const { data: { session } } = await supabase.auth.getSession()
         if (mounted && session?.user?.id) {
           setUserId(session.user.id)
+          
+          // Fetch role
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .single()
+          
+          if (mounted && profileData) {
+            setUserRole(profileData.role)
+          }
         }
       } catch (error) {
         console.error("Error fetching user:", error)
@@ -66,18 +74,46 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }, [])
 
-  // ✅ Fetch subjects only once when userId changes
+  // Fetch subjects based on role
   useEffect(() => {
-    if (!userId || hasFetchedSubjects.current) return
+    if (!userId || !userRole || hasFetchedSubjects.current) return
     
     let mounted = true
     
     async function fetchSubjects() {
       try {
-        const { data, error } = await supabase
-          .from("subjects")
-          .select("id, name")
-          .eq("tutor_id", userId)
+        let query
+        
+        if (userRole === "teacher") {
+          // Teachers see their own subjects
+          query = supabase
+            .from("subjects")
+            .select("id, name")
+            .eq("tutor_id", userId)
+        } else {
+          // Students see subjects from matched tutors
+          const { data: matches } = await supabase
+            .from("matches")
+            .select("tutor_id")
+            .eq("student_id", userId)
+            .eq("status", "active")
+          
+          if (!matches || matches.length === 0) {
+            if (mounted) {
+              setSubjects([])
+              hasFetchedSubjects.current = true
+            }
+            return
+          }
+          
+          const tutorIds = matches.map(m => m.tutor_id)
+          query = supabase
+            .from("subjects")
+            .select("id, name")
+            .in("tutor_id", tutorIds)
+        }
+        
+        const { data, error } = await query
         
         if (error) throw error
         
@@ -95,96 +131,67 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return () => {
       mounted = false
     }
-  }, [userId])
+  }, [userId, userRole])
 
-  // ✅ Subscribe to realtime changes for subjects
-  useEffect(() => {
-    if (!userId) return
+  // Memoize navMain based on role
+  const navMain = useMemo(() => {
+    const baseNav = [
+      {
+        title: "Profile",
+        url: "#",
+        items: [
+          { title: "Dashboard", url: "/my-profile", isActive: false },
+          { title: "Account Settings", url: "/settings", isActive: false },
+        ],
+      },
+      {
+        title: "Meet and Match",
+        url: "/matchmaking",
+        items: [{ title: "Find a Match", url: "/matchmaking", isActive: false }],
+      },
+    ]
 
-    const channel = supabase
-      .channel('subjects-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subjects',
-          filter: `tutor_id=eq.${userId}`
-        },
-        (payload) => {
-          if (!isMounted.current) return
-          
-          if (payload.eventType === 'INSERT') {
-            setSubjects(prev => [...prev, payload.new as any])
-          } else if (payload.eventType === 'DELETE') {
-            setSubjects(prev => prev.filter(s => s.id !== payload.old.id))
-          } else if (payload.eventType === 'UPDATE') {
-            setSubjects(prev => prev.map(s => 
-              s.id === payload.new.id ? payload.new as any : s
-            ))
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [userId])
-
-  // ✅ Memoize navMain to prevent recreation
-  const navMain = useMemo(() => [
-    {
-      title: "Profile",
-      url: "#",
-      items: [
-        { title: "Dashboard", url: "my-profile", isActive: true },
-        { title: "Account Settings", url: "#" },
-      ],
-    },
-    {
-      title: "Meet and Match",
-      url: "/matchmaking",
-      items: [{ title: "Find a Match", url: "/matchmaking" }],
-    },
-    {
+    const coursesNav = {
       title: "Courses",
       url: "#",
       items: [
-        {
+        // Only show Create Subject for teachers
+        ...(userRole === "teacher" ? [{
           title: "+ Create Subject",
           url: "/create-subject",
           isActive: false,
-        },
+        }] : []),
         ...subjects.map((s) => ({
           title: s.name,
           url: `/courses/${s.name}/${s.id}`,
           isActive: false,
         })),
       ],
-    },
-    {
+    }
+
+    const meetingsNav = {
       title: "Meetings",
       url: "#",
       items: [
-        { title: "Schedule", url: "#" },
-        { title: "Join", url: matchId ? `/join/${matchId}` : "#" },
-        { title: "History", url: "#" },
-        { title: "Chat Messages", url: "/chats" },
+        { title: "Schedule", url: "/schedule", isActive: false },
+        { title: "Join", url: matchId ? `/join/${matchId}` : "#", isActive: false },
+        { title: "History", url: "/history", isActive: false },
+        { title: "Chat Messages", url: "/chats", isActive: false },
       ],
-    },
-    {
+    }
+
+    const settingsNav = {
       title: "Settings",
       url: "#",
       items: [
-        { title: "Themes", url: "#" },
-        { title: "Update", url: "#" },
-        { title: "About", url: "#" },
+        { title: "Preferences", url: "/preferences", isActive: false },
+        { title: "About", url: "/about", isActive: false },
       ],
-    },
-  ], [subjects, matchId])
+    }
 
-  // ✅ Memoize sign out handler
+    return [...baseNav, coursesNav, meetingsNav, settingsNav]
+  }, [subjects, matchId, userRole])
+
   const handleSignOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut()
     if (error) {
@@ -194,7 +201,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }, [])
 
-  // ✅ Show loading state
   if (isLoading) {
     return (
       <Sidebar {...props} className="bg-white border-r border-gray-200">

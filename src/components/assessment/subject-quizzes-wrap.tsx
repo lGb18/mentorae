@@ -8,9 +8,12 @@ export default function SubjectQuizzesTabWrapper() {
   const { subjectId } = useParams<{ subjectId: string }>()
   const { user, profile } = useAuth()
   const navigate = useNavigate()
-  const userRole = profile?.role
   
-  if (!subjectId || !user) return null
+  const isTutor = profile?.role === "teacher"
+  
+  if (!subjectId || !user) {
+    return <div className="p-6">Access denied</div>
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -20,12 +23,12 @@ export default function SubjectQuizzesTabWrapper() {
         className="mb-6 -ml-4"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
+        Back to Course
       </Button>
       
       <SubjectQuizzesTab
         subjectId={subjectId}
-        isTutor={userRole === "teacher"}
+        isTutor={isTutor}
       />
     </div>
   )
