@@ -33,7 +33,7 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
           .select("id")
           .eq("name", subjectName)
           .eq("tutor_id", tutorId)
-          .maybeSingle()
+          .single()
         setSubjectId(subject?.id || null)
 
         const { data: existing } = await supabase
@@ -42,7 +42,7 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
           .eq("tutor_id", tutorId)
           .eq("subject_id", subject?.id)
           .eq("grade_level", gradeLevel)
-          .maybeSingle()
+          .single()
         if (existing) {
           setContentId(existing.id)
           setContent(existing.content)

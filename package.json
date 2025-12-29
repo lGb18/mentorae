@@ -4,8 +4,8 @@
   "main": "dist-electron/main/index.js",
   "description": "An Academic Tutoring and Peer Support Hub",
   "author": {
-    "name": "lGb18",
-    "email": "levibarroga18@gmail.com"
+      "name": "lGb18",
+      "email": "levibarroga18@gmail.com"
   },
   "license": "MIT",
   "private": true,
@@ -15,17 +15,19 @@
     }
   },
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build:renderer": "vite build",
-    "build:main": "vite build --mode=production",
-    "build": "tsc && npm run build:main && npm run build:renderer",
-    "build:electron": "npm run build && electron-builder --publish never",
-    "build:electron-builder": "electron-builder",
-    "preview": "vite preview",
-    "pretest": "vite build --mode=test",
-    "test": "vitest run",
-    "dist": "npm run build:electron-builder"
+ "scripts": {
+  "dev": "vite",
+  "build:renderer": "vite build",
+  "build:main": "vite build --mode=production",
+  "build": "tsc && npm run build:main && npm run build:renderer",
+  "build:electron": "npm run build && electron-builder --publish never",
+  "build:electron-builder": "electron-builder",
+  "preview": "vite preview",
+  "pretest": "vite build --mode=test",
+  "test": "vitest run",
+  "dist": "npm run build:electron-builder"
+
+
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -77,40 +79,33 @@
     "files": [
       "dist/**",
       "dist-electron/**",
-      "!**/*.map",
+      "!**/*.map", 
       "!**/*.ts",
       "!**/tsconfig.json",
       "!dist/win-unpacked/",
       "package.json"
+
     ],
     "extraMetadata": {
-      "compressed": true
+    "compressed": true
     },
     "directories": {
-      "buildResources": "assets"
+    "buildResources": "assets"
     },
     "mac": {
       "forceCodeSigning": false,
       "category": "public.app-category.education",
-      "target": [
-        "dmg",
-        "zip"
-      ]
+      "target": ["dmg", "zip"]
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
+      "target": ["AppImage", "deb"],
       "category": "Education"
     },
-    "win": {
+     "win": {
       "forceCodeSigning": false,
       "certificateFile": null,
-      "target": [
-        "nsis",
-        "zip"
-      ]
-    }
+      "target": ["nsis", "zip"]
+      
+  }
   }
 }

@@ -17,9 +17,7 @@ import CreateSubject from './components/create-subject'
 import VideoChatWrapper from './pages/videochatWrapper'
 import CoursePageWrapper from './pages/courses/course-page-wrapper'
 import { MainLayout } from './components/main-layout'
-import QuizBuilderWrapper from '@/components/assessment/qb-wrapper'
-import QuizScoreboardWrapper from '@/components/assessment/qs-wrapper'
-import SubjectQuizzesTabWrapper from '@/components/assessment/subject-quizzes-wrap'
+
 function WelcomePage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
@@ -86,19 +84,12 @@ function App({ currentUserId }: { currentUserId: string }) {
         <Route path="/video/:matchId" element={<VideoChatWrapper />} /> 
         <Route path="create-subject" element={<CreateSubject />} />
 
-        <Route path="courses/:subjectName/:subjectId"element={<CoursePageWrapper />}>
-          <Route path="quizzes" element={<SubjectQuizzesTabWrapper />} />
-          <Route path="quizzes/new" element={<QuizBuilderWrapper />} />
-          <Route path="quizzes/:quizId/edit" element={<QuizBuilderWrapper />} />
-          <Route path="quizzes/:quizId/results" element={<QuizScoreboardWrapper />} />
-        </Route>
+        <Route path="courses/:subjectName/:subjectId"element={<CoursePageWrapper />} />
         <Route path="/join/:matchId" element={< VideoChatWrapper/>} />
-        
-        {/* <Route path="/create-quiz"element={<QuizBuilder tutorId={""} subjectId={""} gradeLevel={""}/>} />
-        <Route path="/my-quizzes" element={<QuizScoreboard assessmentId={""}/>}/> */}
       </Route>
 
-      
+
+
     </Routes>
    
     // <div className='App'>
