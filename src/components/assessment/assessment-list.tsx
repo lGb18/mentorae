@@ -6,12 +6,15 @@ export function AssessmentList({
   tutorId,
   gradeLevel,
   onSelect,
+  refreshKey,
 }: {
   subjectId: string
   tutorId?: string
   gradeLevel?: string
   onSelect: (a: any) => void
+  refreshKey?: number
 }) {
+
   const [assessments, setAssessments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -30,8 +33,6 @@ export function AssessmentList({
     const { data, error } = await query.order("created_at", {
       ascending: false,
     })
-
-      .order("created_at", { ascending: false })
 
     if (error) console.error(error)
     setAssessments(data ?? [])
@@ -64,7 +65,7 @@ export function AssessmentList({
 
   useEffect(() => {
     load()
-  }, [subjectId])
+  }, [subjectId, refreshKey])
 
   if (loading) {
     return (

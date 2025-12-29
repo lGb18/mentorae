@@ -31,6 +31,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   const [activeTab, setActiveTab] = useState<"content" | "assessments">("content")
   const [selectedAssessment, setSelectedAssessment] = useState<any | null>(null)
 
+  const [refreshAssessments, setRefreshAssessments] = useState(0)
   
   useEffect(() => {
     async function fetchProfile() {
@@ -158,6 +159,9 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
       console.error("Failed to delete subject:", err);
       alert("Failed to delete subject. See console.");
     }
+  useEffect(() => {
+  setSelectedAssessment(null)
+  }, [selectedGrade, subjectId])
   };
 
   return (
@@ -273,18 +277,21 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
     {/* ================= ASSESSMENTS TAB ================= */}
     {activeTab === "assessments" && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div key={refreshAssessments}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 lg:col-span-1">
           <h2 className="text-lg font-semibold text-black mb-3">Assessments</h2>
+
              <AssessmentList
                 subjectId={subjectId}
                 tutorId={profile.role === "teacher" ? profile.id : undefined}
                 gradeLevel={`Grade ${selectedGrade}`}
                 onSelect={setSelectedAssessment}
+                refreshKey={refreshAssessments}
                 />
 
               </div>
-
+              
               <div className="lg:col-span-2">
                 {selectedAssessment && profile.role === "teacher" && (
                   <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
@@ -292,33 +299,56 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                       Edit Assessment
                     </h2>
                     <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600">
-                  Status:{" "}
-                  {selectedAssessment.is_published ? (
-                    <span className="text-green-600 font-medium">Published</span>
-                  ) : (
-                    <span className="text-amber-600 font-medium">Draft</span>
-                  )}
-                </span>
+                    <span className="text-sm text-gray-600">
+                      Status:{" "}
+                      {selectedAssessment.is_published ? (
+                        <span className="text-green-600 font-medium">Published</span>
+                      ) : (
+                        <span className="text-amber-600 font-medium">Draft</span>
+                      )}
+                    </span>
 
-                <button
-                  onClick={async () => {
-                    const { data, error } = await supabase
-                      .from("assessments")
-                      .update({ is_published: !selectedAssessment.is_published })
-                      .eq("id", selectedAssessment.id)
-                      .select()
-                      .single()
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          const { error } = await supabase
+                            .from("assessments")
+                            .update({ is_published: !selectedAssessment.is_published })
+                            .eq("id", selectedAssessment.id)
 
-                    if (!error) setSelectedAssessment(data)
-                  }}
-                  className="text-sm px-3 py-1 rounded border"
-                >
-                  {selectedAssessment.is_published ? "Unpublish" : "Publish"}
-                </button>
-              </div>
+                          if (!error) {
+                            setSelectedAssessment(null)
+                            setRefreshAssessments((v) => v + 1)
+                          }
+                        }}
+                        className="text-sm px-3 py-1 rounded border"
+                      >
+                        {selectedAssessment.is_published ? "Unpublish" : "Publish"}
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          if (!confirm("Delete this assessment? This cannot be undone.")) return
+
+                          const { error } = await supabase
+                            .from("assessments")
+                            .delete()
+                            .eq("id", selectedAssessment.id)
+
+                          if (!error) {
+                            setSelectedAssessment(null)
+                            setRefreshAssessments((v) => v + 1)
+                          }
+                        }}
+                        className="text-sm text-red-600 hover:text-red-800 border px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
 
               <AssessmentBuilder
+                key={selectedAssessment.id}
                 tutorId={profile.id}
                 assessmentId={selectedAssessment.id}
                 initialSchema={selectedAssessment.schema}
@@ -337,7 +367,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                   }
 
                   setSelectedAssessment(data)
-
+                  setRefreshAssessments((v) => v + 1)
                   alert("Assessment saved")
                 }}
               />
