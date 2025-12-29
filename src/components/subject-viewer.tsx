@@ -1,73 +1,61 @@
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 
 type SubjectViewerProps = {
-  subjectId: string
+  subjectId: string // can be UUID or subject name
   gradeLevel: string
 }
 
 export default function SubjectViewer({ subjectId, gradeLevel }: SubjectViewerProps) {
   const [content, setContent] = useState("")
   const [resolvedId, setResolvedId] = useState<string | null>(null)
-  const isMounted = useRef(true)
 
-  // ✅ Cleanup
   useEffect(() => {
-    return () => {
-      isMounted.current = false
-    }
-  }, [])
-
-  // ✅ Memoize resolver
-  const resolveSubjectId = useCallback(async () => {
-    if (subjectId.includes("-")) {
-      if (isMounted.current) {
+    
+    const resolveSubjectId = async () => {
+      if (subjectId.includes("-")) {
+        
         setResolvedId(subjectId)
-      }
-    } else {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("id")
-        .eq("name", subjectId)
-        .single()
-      
-      if (!error && data && isMounted.current) {
-        setResolvedId(data.id)
+      } else {
+        const { data, error } = await supabase
+          .from("subjects")
+          .select("id")
+          .eq("name", subjectId)
+          .single()
+        if (!error && data) setResolvedId(data.id)
       }
     }
+    resolveSubjectId()
   }, [subjectId])
 
   useEffect(() => {
-    resolveSubjectId()
-  }, [resolveSubjectId])
+    const fetchContent = async () => {
+      console.log("🎯 SubjectViewer Props:", { subjectId, gradeLevel });
+      if (!resolvedId) return
+      console.log("SubjectViewer fetching content for:", {
+      subject_id: resolvedId,
+      grade_level: gradeLevel
+    });
+      const { data, error } = await supabase
+        .from("subject_content")
+        .select("content")
+        .eq("subject_id", resolvedId)
+        .eq("grade_level", gradeLevel)
+        .single()
 
-  // ✅ Memoize fetch
-  const fetchContent = useCallback(async () => {
-    if (!resolvedId) return
-
-    const { data, error } = await supabase
-      .from("subject_content")
-      .select("content")
-      .eq("subject_id", resolvedId)
-      .eq("grade_level", gradeLevel)
-      .single()
-
-    if (!isMounted.current) return
-
-    if (error) {
-      if (error.code === "PGRST116") {
-        setContent("No tutor has been assigned yet.")
+       if (error) {
+        
+        if (error.code === "PGRST116") {
+          setContent("No tutor has been assigned yet.")
+        } else {
+          console.error("Error loading content:", error)
+        }
       } else {
-        console.error("Error loading content:", error)
+        setContent(data?.content || "")
       }
-    } else {
-      setContent(data?.content || "")
     }
-  }, [resolvedId, gradeLevel])
-
-  useEffect(() => {
     fetchContent()
-  }, [fetchContent])
+  }, [resolvedId, gradeLevel])
   
   return (
     <div

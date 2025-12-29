@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/lib/supabaseClient"
-import { Plus, MoreVertical, CheckCircle, Clock, Trash2 } from "lucide-react"
+import { Plus, MoreVertical, CheckCircle, Clock } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,7 +17,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 
@@ -79,40 +78,6 @@ export default function SubjectQuizzesTab({
     }
   }
 
-  const deleteQuiz = async (quizId: string, quizTitle: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${quizTitle}"? This action cannot be undone.`
-      )
-    )
-      return
-
-    // Delete quiz questions first
-    const { error: questionsError } = await supabase
-      .from("quiz_questions")
-      .delete()
-      .eq("quiz_id", quizId)
-
-    if (questionsError) {
-      console.error(questionsError)
-      alert("Failed to delete quiz questions")
-      return
-    }
-
-    // Then delete the quiz
-    const { error: quizError } = await supabase
-      .from("quizzes")
-      .delete()
-      .eq("id", quizId)
-
-    if (quizError) {
-      console.error(quizError)
-      alert("Failed to delete quiz")
-    } else {
-      fetchQuizzes()
-    }
-  }
-
   const bulkPublishAll = async () => {
     if (!confirm("Are you sure you want to publish all drafts?")) return
 
@@ -157,7 +122,7 @@ export default function SubjectQuizzesTab({
         {/* Tutor-only actions */}
         {isTutor && (
           <div className="flex gap-2">
-            <Button onClick={() => navigate(`new`)}>
+            <Button onClick={() => navigate(`quizzes/new`)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Quiz
             </Button>
@@ -239,7 +204,7 @@ export default function SubjectQuizzesTab({
                           <DropdownMenuItem
                             onClick={() =>
                               navigate(
-                                `${quiz.id}/edit`
+                                `quizzes/${quiz.id}/edit`
                               )
                             }
                           >
@@ -249,7 +214,7 @@ export default function SubjectQuizzesTab({
                           <DropdownMenuItem
                             onClick={() =>
                               navigate(
-                                `${quiz.id}/results`
+                                `quizzes/${quiz.id}/results`
                               )
                             }
                           >
@@ -262,18 +227,6 @@ export default function SubjectQuizzesTab({
                             }
                           >
                             {quiz.is_published ? "Unpublish" : "Publish"}
-                          </DropdownMenuItem>
-
-                          <DropdownMenuSeparator />
-
-                          <DropdownMenuItem
-                            onClick={() =>
-                              deleteQuiz(quiz.id, quiz.title)
-                            }
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
