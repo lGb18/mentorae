@@ -4,6 +4,9 @@ import SubjectEditor from "./subject-editor";
 import SubjectViewer from "./subject-viewer";
 import { endMatch } from "@/lib/match-table";
 import { useNavigate } from "react-router-dom";
+import { AssessmentList } from "@/components/assessment/assessment-list"
+import { AssessmentBuilder } from "@/components/assessment/assess-builder"
+import { AssessmentRunner } from "@/components/assessment/assess-runner"
 
 type Profile = {
   id: string;
@@ -24,6 +27,11 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   const [selectedGrade, setSelectedGrade] = useState("1");
   const [matchedTutorId, setMatchedTutorId] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  const [activeTab, setActiveTab] = useState<"content" | "assessments">("content")
+  const [selectedAssessment, setSelectedAssessment] = useState<any | null>(null)
+
+  
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
@@ -153,125 +161,204 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   };
 
   return (
-  <div className="max-w-4xl mx-auto p-6 space-y-6">
-    <h1 className="text-2xl font-bold text-black tracking-tight">{subject.toUpperCase()}</h1>
+  <div className="max-w-4xl mx-auto p-6 space-y-8">
+    {/* Header */}
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <h1 className="text-2xl sm:text-3xl font-bold text-black tracking-tight">
+        {subject.toUpperCase()}
+      </h1>
 
-    {profile.role === "teacher" ? (
-      <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
-        <p className="text-black font-medium">Welcome, {profile.display_name}</p>
+      {/* Tabs */}
+      <div className="inline-flex w-fit rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
+        <button
+          onClick={() => setActiveTab("content")}
+          className={
+            activeTab === "content"
+              ? "px-4 py-2 text-sm font-semibold bg-black text-white"
+              : "px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          }
+        >
+          Content
+        </button>
 
-        {/* Grade selector */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-black">Select Level:</label>
-          <select
-            value={selectedGrade}
-            onChange={(e) => setSelectedGrade(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
-          >
-            <option value="1">Grade 1</option>
-            <option value="2">Grade 2</option>
-            <option value="3">Grade 3</option>
-            <option value="4">Grade 4</option>
-            <option value="5">Grade 5</option>
-            <option value="6">Grade 6</option>
-          </select>
-        </div>
+        <button
+          onClick={() => setActiveTab("assessments")}
+          className={
+            activeTab === "assessments"
+              ? "px-4 py-2 text-sm font-semibold bg-black text-white"
+              : "px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          }
+        >
+          Assessments
+        </button>
+      </div>
+    </div>
 
-        {/* Actions */}
-        <div className="flex flex-wrap gap-3 mt-2">
-          {!hasContent && (
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-              onClick={handleCreateContent}
-            >
-              Create Subject Content
-            </button>
-          )}
-          {hasContent && (
-            <div className="w-full">
+    {/* ================= CONTENT TAB ================= */}
+    {activeTab === "content" && (
+      <div className="space-y-6">
+        {/* Teacher Panel */}
+        {profile.role === "teacher" && (
+          <div className="bg-white border border-gray-300 rounded-lg shadow-sm">
+            <div className="p-6 space-y-4 text-left">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-black font-medium">
+                  Welcome, {profile.display_name}
+                </p>
+
+                <div className="flex flex-wrap gap-3">
+                  {!hasContent && (
+                    <button
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                      onClick={handleCreateContent}
+                    >
+                      Create Subject Content
+                    </button>
+                  )}
+
+                  <button
+                    className="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded"
+                    onClick={handleDeleteSubject}
+                  >
+                    Delete Subject
+                  </button>
+                </div>
+              </div>
+
+              {/* Grade selector */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <label className="text-sm font-medium text-black">
+                  Select Level:
+                </label>
+                <select
+                  value={selectedGrade}
+                  onChange={(e) => setSelectedGrade(e.target.value)}
+                  className="w-full sm:w-auto border border-gray-300 rounded px-2 py-2 text-black bg-white"
+                >
+                  <option value="1">Grade 1</option>
+                  <option value="2">Grade 2</option>
+                  <option value="3">Grade 3</option>
+                  <option value="4">Grade 4</option>
+                  <option value="5">Grade 5</option>
+                  <option value="6">Grade 6</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Subject Editor */}
+        {profile.role === "teacher" && hasContent && (
+          <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                <h2 className="text-lg font-semibold text-black">
+                  Subject Content
+                </h2>
+                <p className="text-sm text-gray-600">Grade {selectedGrade}</p>
+              </div>
+            </div>
+
+            <div className="p-6">
               <SubjectEditor
                 subjectName={subject}
                 gradeLevel={`Grade ${selectedGrade}`}
                 tutorId={profile.id}
               />
             </div>
-          )}
-
-          <button
-            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
-            onClick={handleDeleteSubject}
-          >
-            Delete Subject
-          </button>
-        </div>
+          </div>
+        )}
       </div>
-    ) : (
-      <div className="bg-white border border-gray-300 rounded-lg p-6 space-y-4 shadow-sm">
-        <p className="text-black font-medium">Welcome, {profile.display_name} (Student)</p>
+    )}
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-black">Select Grade:</label>
-          <select
-            value={selectedGrade}
-            onChange={(e) => setSelectedGrade(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 focus:border-black focus:ring-black text-black"
-          >
-            <option value="1">Grade 1</option>
-            <option value="2">Grade 2</option>
-            <option value="3">Grade 3</option>
-            <option value="4">Grade 4</option>
-            <option value="5">Grade 5</option>
-            <option value="6">Grade 6</option>
-          </select>
+    {/* ================= ASSESSMENTS TAB ================= */}
+    {activeTab === "assessments" && (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 lg:col-span-1">
+          <h2 className="text-lg font-semibold text-black mb-3">Assessments</h2>
+             <AssessmentList
+                subjectId={subjectId}
+                tutorId={profile.role === "teacher" ? profile.id : undefined}
+                gradeLevel={`Grade ${selectedGrade}`}
+                onSelect={setSelectedAssessment}
+                />
+
+              </div>
+
+              <div className="lg:col-span-2">
+                {selectedAssessment && profile.role === "teacher" && (
+                  <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
+                    <h2 className="text-lg font-semibold text-black mb-3">
+                      Edit Assessment
+                    </h2>
+                    <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-600">
+                  Status:{" "}
+                  {selectedAssessment.is_published ? (
+                    <span className="text-green-600 font-medium">Published</span>
+                  ) : (
+                    <span className="text-amber-600 font-medium">Draft</span>
+                  )}
+                </span>
+
+                <button
+                  onClick={async () => {
+                    const { data, error } = await supabase
+                      .from("assessments")
+                      .update({ is_published: !selectedAssessment.is_published })
+                      .eq("id", selectedAssessment.id)
+                      .select()
+                      .single()
+
+                    if (!error) setSelectedAssessment(data)
+                  }}
+                  className="text-sm px-3 py-1 rounded border"
+                >
+                  {selectedAssessment.is_published ? "Unpublish" : "Publish"}
+                </button>
+              </div>
+
+              <AssessmentBuilder
+                tutorId={profile.id}
+                assessmentId={selectedAssessment.id}
+                initialSchema={selectedAssessment.schema}
+                onSave={async (schema) => {
+                  const { data, error } = await supabase
+                    .from("assessments")
+                    .update({ schema })
+                    .eq("id", selectedAssessment.id)
+                    .select()
+                    .single()
+
+                  if (error) {
+                    console.error(error)
+                    alert("Failed to save assessment")
+                    return
+                  }
+
+                  setSelectedAssessment(data)
+
+                  alert("Assessment saved")
+                }}
+              />
+            </div>
+          )}
+          {selectedAssessment && profile.role === "student" && (
+          <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
+            <h2 className="text-lg font-semibold text-black mb-3">
+              {selectedAssessment.title}
+            </h2>
+
+            <AssessmentRunner
+              assessmentId={selectedAssessment.id}
+              studentId={profile.id}
+              schema={selectedAssessment.schema}
+              passingScore={selectedAssessment.passing_score}
+            />
+          </div>
+        )}
+
         </div>
-
-        {/* Status messages */}
-        {!matchedTutorId ? (
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-            <p>No tutor assigned for {subject.toUpperCase()} - Grade {selectedGrade}.</p>
-          </div>
-        ) : !hasContent ? (
-          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-            <p>Your tutor hasn't created content for {subject} - Grade {selectedGrade} yet.</p>
-            <p>Please check back later or contact your tutor.</p>
-          </div>
-        ) : (
-          <SubjectViewer 
-            subjectId={subject} 
-            gradeLevel={`Grade ${selectedGrade}`}
-          />
-        )}
-
-        {matchedTutorId && profile?.id && (
-          <button
-            className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
-            onClick={async () => {
-              try {
-                const { data: matches, error } = await supabase
-                  .from("matches")
-                  .select("*")
-                  .eq("student_id", profile.id)
-                  .eq("tutor_id", matchedTutorId)
-                  .eq("status", "active")
-                  .order("created_at", { ascending: false })
-                  .limit(1);
-
-                if (error) throw error;
-
-                if (matches && matches.length > 0) {
-                  const match = matches[0];
-                  await endMatch(match.id);
-                  setMatchedTutorId(null);
-                  setHasContent(false);
-                }
-              } catch (err) {
-                console.error("Error ending match:", err);
-              }
-            }}
-          >
-            End Match
-          </button>
-        )}
       </div>
     )}
   </div>

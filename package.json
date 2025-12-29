@@ -4,8 +4,8 @@
   "main": "dist-electron/main/index.js",
   "description": "An Academic Tutoring and Peer Support Hub",
   "author": {
-      "name": "lGb18",
-      "email": "levibarroga18@gmail.com"
+    "name": "lGb18",
+    "email": "levibarroga18@gmail.com"
   },
   "license": "MIT",
   "private": true,
@@ -15,19 +15,17 @@
     }
   },
   "type": "module",
- "scripts": {
-  "dev": "vite",
-  "build:renderer": "vite build",
-  "build:main": "vite build --mode=production",
-  "build": "tsc && npm run build:main && npm run build:renderer",
-  "build:electron": "npm run build && electron-builder --publish never",
-  "build:electron-builder": "electron-builder",
-  "preview": "vite preview",
-  "pretest": "vite build --mode=test",
-  "test": "vitest run",
-  "dist": "npm run build:electron-builder"
-
-
+  "scripts": {
+    "dev": "vite",
+    "build:renderer": "vite build",
+    "build:main": "vite build --mode=production",
+    "build": "tsc && npm run build:main && npm run build:renderer",
+    "build:electron": "npm run build && electron-builder --publish never",
+    "build:electron-builder": "electron-builder",
+    "preview": "vite preview",
+    "pretest": "vite build --mode=test",
+    "test": "vitest run",
+    "dist": "npm run build:electron-builder"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -46,8 +44,11 @@
     "electron-updater": "^6.3.9",
     "lucide-react": "^0.544.0",
     "peerjs": "^1.5.5",
+    "react-katex": "^3.1.0",
     "react-quill": "^2.0.0",
     "react-router-dom": "^7.9.1",
+    "survey-core": "^2.5.3",
+    "survey-react": "^1.12.58",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7"
   },
@@ -56,6 +57,7 @@
     "@types/node": "^24.4.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/react-katex": "^3.0.4",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "builder": "^5.0.0",
@@ -79,33 +81,40 @@
     "files": [
       "dist/**",
       "dist-electron/**",
-      "!**/*.map", 
+      "!**/*.map",
       "!**/*.ts",
       "!**/tsconfig.json",
       "!dist/win-unpacked/",
       "package.json"
-
     ],
     "extraMetadata": {
-    "compressed": true
+      "compressed": true
     },
     "directories": {
-    "buildResources": "assets"
+      "buildResources": "assets"
     },
     "mac": {
       "forceCodeSigning": false,
       "category": "public.app-category.education",
-      "target": ["dmg", "zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Education"
     },
-     "win": {
+    "win": {
       "forceCodeSigning": false,
       "certificateFile": null,
-      "target": ["nsis", "zip"]
-      
-  }
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    }
   }
 }
