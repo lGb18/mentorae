@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { AssessmentList } from "@/components/assessment/assessment-list"
 import { AssessmentBuilder } from "@/components/assessment/assess-builder"
 import { AssessmentRunner } from "@/components/assessment/assess-runner"
+import { Survey } from "survey-react";
 
 type Profile = {
   id: string;
@@ -37,7 +38,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
   const [attempts, setAttempts] = useState<any[]>([])
   const [loadingAttempts, setLoadingAttempts] = useState(false)
-
+  const [activeAttempt, setActiveAttempt] = useState<any | null>(null)
   useEffect(() => {
     if (!selectedAssessment) {
       setAttempts([])
@@ -62,7 +63,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
     }
 
     loadAttempts()
-  }, [selectedAssessment?.id])
+  }, [selectedAssessment?.id, refreshAssessments])
 
   useEffect(() => {
     if (selectedAssessment) {
@@ -71,9 +72,16 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   }, [selectedAssessment?.id])
 
   useEffect(() => {
-  setSelectedAssessment(null)
-  setRefreshAssessments((v) => v + 1)
+    setSelectedAssessment(null)
+    setActiveAttempt(null)
+    setAttempts([])
+    setRefreshAssessments((v) => v + 1)
   }, [selectedGrade, subjectId])
+  useEffect(() => {
+    setActiveAttempt(null)
+  }, [selectedAssessment?.id])
+
+
 
   useEffect(() => {
     async function fetchProfile() {
@@ -459,11 +467,47 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                       <span className={a.passed ? "text-green-600" : "text-red-600"}>
                         {a.percentage?.toFixed(0)}%
                       </span>
+                      <button
+                      onClick={() => setActiveAttempt(a)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Review
+                    </button>
                     </div>
                   ))}
                 </div>
               </div>
+                  {activeAttempt && (
+                  <div className="mt-6 border-t pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold">Review Attempt</h3>
+                      <button
+                        onClick={() => setActiveAttempt(null)}
+                        className="text-xs text-gray-600 hover:text-gray-800"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    
+                    <Survey
+                      json={selectedAssessment.schema}
+                      data={activeAttempt.answers}
+                      mode="display"
+                      showCompletedPage={false}
+                      showNavigationButtons={false}
+                      onAfterRenderQuestion={(
+                        survey: any,
+                        options: { question: any }
+                      ) => {
+                        const q = options.question
 
+                        if (q.correctAnswer !== undefined) {
+                          q.readOnly = true
+                        }
+                      }}
+                    />
+                  </div>
+                )}
             </div>
           )}
           {selectedAssessment && profile.role === "student" && (

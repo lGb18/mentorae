@@ -48,6 +48,7 @@ export function AssessmentRunner({
       score: correct,
       percentage,
       passed,
+      answers,
     })
 
     if (error) {
