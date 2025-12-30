@@ -25,7 +25,7 @@ export function AssessmentList({
       .from("assessments")
       .select("*")
       .eq("subject_id", subjectId)
-
+      .eq("grade_level", gradeLevel)
     if (!tutorId) {
       query = query.eq("is_published", true)
     }

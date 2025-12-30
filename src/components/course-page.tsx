@@ -32,7 +32,49 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   const [selectedAssessment, setSelectedAssessment] = useState<any | null>(null)
 
   const [refreshAssessments, setRefreshAssessments] = useState(0)
-  
+  const [title, setTitle] = useState("")
+  const [savingTitle, setSavingTitle] = useState(false)
+
+  const [attempts, setAttempts] = useState<any[]>([])
+  const [loadingAttempts, setLoadingAttempts] = useState(false)
+
+  useEffect(() => {
+    if (!selectedAssessment) {
+      setAttempts([])
+      return
+    }
+
+    async function loadAttempts() {
+      setLoadingAttempts(true)
+
+      const { data, error } = await supabase
+        .from("assessment_attempts")
+        .select("id, score, percentage, passed, completed_at, student_id")
+        .eq("assessment_id", selectedAssessment.id)
+        .order("completed_at", { ascending: false })
+
+      if (error) {
+        console.error("Failed to load attempts", error)
+      }
+
+      setAttempts(data ?? [])
+      setLoadingAttempts(false)
+    }
+
+    loadAttempts()
+  }, [selectedAssessment?.id])
+
+  useEffect(() => {
+    if (selectedAssessment) {
+      setTitle(selectedAssessment.title)
+    }
+  }, [selectedAssessment?.id])
+
+  useEffect(() => {
+  setSelectedAssessment(null)
+  setRefreshAssessments((v) => v + 1)
+  }, [selectedGrade, subjectId])
+
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
@@ -159,9 +201,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
       console.error("Failed to delete subject:", err);
       alert("Failed to delete subject. See console.");
     }
-  useEffect(() => {
-  setSelectedAssessment(null)
-  }, [selectedGrade, subjectId])
+  
   };
 
   return (
@@ -246,6 +286,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                   <option value="5">Grade 5</option>
                   <option value="6">Grade 6</option>
                 </select>
+                
               </div>
             </div>
           </div>
@@ -298,6 +339,33 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                     <h2 className="text-lg font-semibold text-black mb-3">
                       Edit Assessment
                     </h2>
+                    <input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onBlur={async () => {
+                        if (title === selectedAssessment.title) return
+                        setSavingTitle(true)
+
+                        const { data, error } = await supabase
+                          .from("assessments")
+                          .update({ title })
+                          .eq("id", selectedAssessment.id)
+                          .select()
+                          .single()
+
+                        setSavingTitle(false)
+
+                        if (!error) {
+                          setSelectedAssessment(data)
+                          setRefreshAssessments((v) => v + 1)
+                        }
+                      }}
+                      className="text-lg font-semibold border rounded px-2 py-1 w-full"
+                    />
+                    <p className="text-xs text-gray-500 mb-2">
+                      {selectedAssessment.grade_level}
+                    </p>
+
                     <div className="flex items-center justify-between mb-3">
                     <span className="text-sm text-gray-600">
                       Status:{" "}
@@ -371,6 +439,31 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                   alert("Assessment saved")
                 }}
               />
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-sm font-semibold mb-2">Attempts</h3>
+
+                {attempts.length === 0 && (
+                  <p className="text-xs text-gray-500">No attempts yet</p>
+                )}
+
+                <div className="space-y-2">
+                  {attempts.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex justify-between items-center border rounded px-3 py-2 text-sm"
+                    >
+                      <span>
+                        {new Date(a.completed_at).toLocaleString()}
+                      </span>
+
+                      <span className={a.passed ? "text-green-600" : "text-red-600"}>
+                        {a.percentage?.toFixed(0)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           )}
           {selectedAssessment && profile.role === "student" && (
@@ -385,6 +478,31 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
               schema={selectedAssessment.schema}
               passingScore={selectedAssessment.passing_score}
             />
+            <div className="mt-6 border-t pt-4">
+              <h3 className="text-sm font-semibold mb-2">Attempts</h3>
+
+              {attempts.length === 0 && (
+                <p className="text-xs text-gray-500">No attempts yet</p>
+              )}
+
+              <div className="space-y-2">
+                {attempts.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex justify-between items-center border rounded px-3 py-2 text-sm"
+                  >
+                    <span>
+                      {new Date(a.completed_at).toLocaleString()}
+                    </span>
+
+                    <span className={a.passed ? "text-green-600" : "text-red-600"}>
+                      {a.percentage?.toFixed(0)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
         )}
 
