@@ -1,45 +1,50 @@
 import { Survey } from "survey-react"
 import { supabase } from "@/lib/supabaseClient"
-
 type Props = {
   assessmentId: string
   studentId: string
   schema: any
   passingScore?: number
+  canAttempt?: boolean
+  attemptLimit?: number | null
+  attemptsUsed?: number
 }
+
 export function AssessmentRunner({
   assessmentId,
   studentId,
   schema,
   passingScore = 70,
+  canAttempt,
+  attemptLimit,
+  attemptsUsed = 0,
 }: Props) {
+  if (!canAttempt) {
+    return (
+      <div className="border rounded p-4 text-sm text-gray-600">
+        You’ve reached the maximum number of attempts
+        {attemptLimit != null && <> ({attemptsUsed}/{attemptLimit})</>}
+        .
+      </div>
+    )
+  }
+
   async function submitAttempt(answers: Record<string, any>) {
     let correct = 0
     let total = 0
 
-    if (schema?.questions) {
-      schema.questions.forEach((q: any) => {
-        if (q.correct !== undefined) {
+    const pages = schema?.pages ?? [{ elements: schema?.elements ?? [] }]
+
+    pages.forEach((page: any) => {
+      page.elements?.forEach((q: any) => {
+        if (q.correctAnswer !== undefined) {
           total++
-          if (answers[q.id] === q.correct) correct++
+          if (answers[q.name] === q.correctAnswer) correct++
         }
       })
-    } else {
-      const pages = schema?.pages ?? [{ elements: schema?.elements ?? [] }]
+    })
 
-      pages.forEach((page: any) => {
-        page.elements?.forEach((q: any) => {
-          if (q.correctAnswer !== undefined) {
-            total++
-            if (answers[q.name] === q.correctAnswer) {
-              correct++
-            }
-          }
-        })
-      })
-    }
-
-    const percentage = total > 0 ? (correct / total) * 100 : 0
+    const percentage = total ? (correct / total) * 100 : 0
     const passed = percentage >= passingScore
 
     const { error } = await supabase.from("assessment_attempts").insert({
@@ -52,7 +57,7 @@ export function AssessmentRunner({
     })
 
     if (error) {
-      console.error("Submit attempt failed:", error)
+      console.error("Failed to save attempt:", error)
     }
   }
 

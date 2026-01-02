@@ -17,6 +17,7 @@ import CreateSubject from './components/create-subject'
 import VideoChatWrapper from './pages/videochatWrapper'
 import CoursePageWrapper from './pages/courses/course-page-wrapper'
 import { MainLayout } from './components/main-layout'
+import { AssessmentAttemptsPage } from "./components/assessment/attempts-page"
 
 function WelcomePage() {
   return (
@@ -86,6 +87,8 @@ function App({ currentUserId }: { currentUserId: string }) {
 
         <Route path="courses/:subjectName/:subjectId"element={<CoursePageWrapper />} />
         <Route path="/join/:matchId" element={< VideoChatWrapper/>} />
+        <Route path="/assessments/:assessmentId/attempts"element={<AssessmentAttemptsPage />}
+/>
       </Route>
 
 

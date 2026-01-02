@@ -35,36 +35,9 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   const [refreshAssessments, setRefreshAssessments] = useState(0)
   const [title, setTitle] = useState("")
   const [savingTitle, setSavingTitle] = useState(false)
-
-  const [attempts, setAttempts] = useState<any[]>([])
-  const [loadingAttempts, setLoadingAttempts] = useState(false)
   const [activeAttempt, setActiveAttempt] = useState<any | null>(null)
-  useEffect(() => {
-    if (!selectedAssessment) {
-      setAttempts([])
-      return
-    }
 
-    async function loadAttempts() {
-      setLoadingAttempts(true)
-
-      const { data, error } = await supabase
-        .from("assessment_attempts")
-        .select("id, score, percentage, passed, completed_at, student_id")
-        .eq("assessment_id", selectedAssessment.id)
-        .order("completed_at", { ascending: false })
-
-      if (error) {
-        console.error("Failed to load attempts", error)
-      }
-
-      setAttempts(data ?? [])
-      setLoadingAttempts(false)
-    }
-
-    loadAttempts()
-  }, [selectedAssessment?.id, refreshAssessments])
-
+  
   useEffect(() => {
     if (selectedAssessment) {
       setTitle(selectedAssessment.title)
@@ -73,16 +46,10 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
   useEffect(() => {
     setSelectedAssessment(null)
-    setActiveAttempt(null)
-    setAttempts([])
+   
     setRefreshAssessments((v) => v + 1)
   }, [selectedGrade, subjectId])
-  useEffect(() => {
-    setActiveAttempt(null)
-  }, [selectedAssessment?.id])
-
-
-
+ 
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
@@ -447,106 +414,32 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                   alert("Assessment saved")
                 }}
               />
-              <div className="mt-6 border-t pt-4">
-                <h3 className="text-sm font-semibold mb-2">Attempts</h3>
+              <button
+              onClick={() =>
+                navigate(`/assessments/${selectedAssessment.id}/attempts`)
+              }
+              className="text-sm px-3 py-1 rounded border"
+            >
+              View Attempts
+            </button>
 
-                {attempts.length === 0 && (
-                  <p className="text-xs text-gray-500">No attempts yet</p>
-                )}
-
-                <div className="space-y-2">
-                  {attempts.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex justify-between items-center border rounded px-3 py-2 text-sm"
-                    >
-                      <span>
-                        {new Date(a.completed_at).toLocaleString()}
-                      </span>
-
-                      <span className={a.passed ? "text-green-600" : "text-red-600"}>
-                        {a.percentage?.toFixed(0)}%
-                      </span>
-                      <button
-                      onClick={() => setActiveAttempt(a)}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      Review
-                    </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-                  {activeAttempt && (
-                  <div className="mt-6 border-t pt-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold">Review Attempt</h3>
-                      <button
-                        onClick={() => setActiveAttempt(null)}
-                        className="text-xs text-gray-600 hover:text-gray-800"
-                      >
-                        Close
-                      </button>
-                    </div>
-                    
-                    <Survey
-                      json={selectedAssessment.schema}
-                      data={activeAttempt.answers}
-                      mode="display"
-                      showCompletedPage={false}
-                      showNavigationButtons={false}
-                      onAfterRenderQuestion={(
-                        survey: any,
-                        options: { question: any }
-                      ) => {
-                        const q = options.question
-
-                        if (q.correctAnswer !== undefined) {
-                          q.readOnly = true
-                        }
-                      }}
-                    />
-                  </div>
-                )}
+                  
             </div>
+            
           )}
           {selectedAssessment && profile.role === "student" && (
           <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
             <h2 className="text-lg font-semibold text-black mb-3">
               {selectedAssessment.title}
             </h2>
-
+            
             <AssessmentRunner
               assessmentId={selectedAssessment.id}
               studentId={profile.id}
               schema={selectedAssessment.schema}
               passingScore={selectedAssessment.passing_score}
             />
-            <div className="mt-6 border-t pt-4">
-              <h3 className="text-sm font-semibold mb-2">Attempts</h3>
-
-              {attempts.length === 0 && (
-                <p className="text-xs text-gray-500">No attempts yet</p>
-              )}
-
-              <div className="space-y-2">
-                {attempts.map((a) => (
-                  <div
-                    key={a.id}
-                    className="flex justify-between items-center border rounded px-3 py-2 text-sm"
-                  >
-                    <span>
-                      {new Date(a.completed_at).toLocaleString()}
-                    </span>
-
-                    <span className={a.passed ? "text-green-600" : "text-red-600"}>
-                      {a.percentage?.toFixed(0)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+            
           </div>
         )}
 
