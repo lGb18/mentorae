@@ -64,7 +64,37 @@ export function AssessmentBuilder({
 
   async function handleSave() {
     setSaving(true)
-    await onSave({ questions })
+    const surveySchema = {
+    pages: [
+      {
+        name: "page1",
+        elements: questions.flatMap((q) => {
+          const els: any[] = []
+
+          if (q.image) {
+            els.push({
+              type: "html",
+              name: `${q.id}_img`,
+              html: `<img src="${q.image}" style="max-width:320px;border-radius:8px;" />`,
+            })
+          }
+
+          els.push({
+            type: "radiogroup",
+            name: q.id,
+            title: q.prompt,
+            choices: q.options,
+            correctAnswer: q.correct,
+          })
+
+          return els
+        }),
+      },
+    ],
+  }
+
+  await onSave(surveySchema)
+
     setSaving(false)
     setLastSaved(new Date().toLocaleTimeString())
   }

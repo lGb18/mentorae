@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 import SubjectEditor from "./subject-editor";
 import SubjectViewer from "./subject-viewer";
 import { endMatch } from "@/lib/match-table";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { AssessmentList } from "@/components/assessment/assessment-list"
 import { AssessmentBuilder } from "@/components/assessment/assess-builder"
 import { AssessmentRunner } from "@/components/assessment/assess-runner"
@@ -225,7 +225,14 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                   Welcome, {profile.display_name}
                 </p>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <NavLink
+                    to={`/tutor/progress/${subjectId}/${selectedGrade}`}
+                    className="text-sm text-gray-700 hover:underline"
+                  >
+                    Student Progress
+                  </NavLink>
+
                   {!hasContent && (
                     <button
                       className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
@@ -261,7 +268,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                   <option value="5">Grade 5</option>
                   <option value="6">Grade 6</option>
                 </select>
-                
               </div>
             </div>
           </div>
@@ -298,107 +304,141 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
         <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 lg:col-span-1">
           <h2 className="text-lg font-semibold text-black mb-3">Assessments</h2>
 
-             <AssessmentList
-                subjectId={subjectId}
-                tutorId={profile.role === "teacher" ? profile.id : undefined}
-                gradeLevel={`Grade ${selectedGrade}`}
-                onSelect={setSelectedAssessment}
-                refreshKey={refreshAssessments}
-                />
+          <AssessmentList
+            subjectId={subjectId}
+            tutorId={profile.role === "teacher" ? profile.id : undefined}
+            gradeLevel={`Grade ${selectedGrade}`}
+            onSelect={setSelectedAssessment}
+            refreshKey={refreshAssessments}
+          />
+        </div>
+        
+        <div className="lg:col-span-2">
+          {selectedAssessment && profile.role === "teacher" && (
+            <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
+              <h2 className="text-lg font-semibold text-black mb-3">
+                Edit Assessment
+              </h2>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={async () => {
+                  if (title === selectedAssessment.title) return
+                  setSavingTitle(true)
 
+                  const { data, error } = await supabase
+                    .from("assessments")
+                    .update({ title })
+                    .eq("id", selectedAssessment.id)
+                    .select()
+                    .single()
+
+                  setSavingTitle(false)
+
+                  if (!error) {
+                    setSelectedAssessment(data)
+                    setRefreshAssessments((v) => v + 1)
+                  }
+                }}
+                className="text-lg font-semibold border rounded px-2 py-1 w-full"
+              />
+              <p className="text-xs text-gray-500 mb-2">
+                {selectedAssessment.grade_level}
+              </p>
+
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-600">
+                  Status:{" "}
+                  {selectedAssessment.is_published ? (
+                    <span className="text-green-600 font-medium">Published</span>
+                  ) : (
+                    <span className="text-amber-600 font-medium">Draft</span>
+                  )}
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      const { error } = await supabase
+                        .from("assessments")
+                        .update({ is_published: !selectedAssessment.is_published })
+                        .eq("id", selectedAssessment.id)
+
+                      if (!error) {
+                        setSelectedAssessment(null)
+                        setRefreshAssessments((v) => v + 1)
+                      }
+                    }}
+                    className="text-sm px-3 py-1 rounded border"
+                  >
+                    {selectedAssessment.is_published ? "Unpublish" : "Publish"}
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Delete this assessment? This cannot be undone.")) return
+
+                      const { error } = await supabase
+                        .from("assessments")
+                        .delete()
+                        .eq("id", selectedAssessment.id)
+
+                      if (!error) {
+                        setSelectedAssessment(null)
+                        setRefreshAssessments((v) => v + 1)
+                      }
+                    }}
+                    className="text-sm text-red-600 hover:text-red-800 border px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              
-              <div className="lg:col-span-2">
-                {selectedAssessment && profile.role === "teacher" && (
-                  <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
-                    <h2 className="text-lg font-semibold text-black mb-3">
-                      Edit Assessment
-                    </h2>
-                    <input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      onBlur={async () => {
-                        if (title === selectedAssessment.title) return
-                        setSavingTitle(true)
 
-                        const { data, error } = await supabase
-                          .from("assessments")
-                          .update({ title })
-                          .eq("id", selectedAssessment.id)
-                          .select()
-                          .single()
+              <div className="mb-3 flex items-center gap-3">
+                <label className="text-sm text-gray-600">
+                  Attempt limit
+                </label>
 
-                        setSavingTitle(false)
+                <input
+                  type="number"
+                  min={1}
+                  placeholder="Unlimited"
+                  value={selectedAssessment.attempt_limit ?? ""}
+                  onChange={async (e) => {
+                    const value =
+                      e.target.value === ""
+                        ? null
+                        : Number(e.target.value)
 
-                        if (!error) {
-                          setSelectedAssessment(data)
-                          setRefreshAssessments((v) => v + 1)
-                        }
-                      }}
-                      className="text-lg font-semibold border rounded px-2 py-1 w-full"
-                    />
-                    <p className="text-xs text-gray-500 mb-2">
-                      {selectedAssessment.grade_level}
-                    </p>
+                    const { data, error } = await supabase
+                      .from("assessments")
+                      .update({ attempt_limit: value })
+                      .eq("id", selectedAssessment.id)
+                      .select()
+                      .single()
 
-                    <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-gray-600">
-                      Status:{" "}
-                      {selectedAssessment.is_published ? (
-                        <span className="text-green-600 font-medium">Published</span>
-                      ) : (
-                        <span className="text-amber-600 font-medium">Draft</span>
-                      )}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={async () => {
-                          const { error } = await supabase
-                            .from("assessments")
-                            .update({ is_published: !selectedAssessment.is_published })
-                            .eq("id", selectedAssessment.id)
-
-                          if (!error) {
-                            setSelectedAssessment(null)
-                            setRefreshAssessments((v) => v + 1)
-                          }
-                        }}
-                        className="text-sm px-3 py-1 rounded border"
-                      >
-                        {selectedAssessment.is_published ? "Unpublish" : "Publish"}
-                      </button>
-
-                      <button
-                        onClick={async () => {
-                          if (!confirm("Delete this assessment? This cannot be undone.")) return
-
-                          const { error } = await supabase
-                            .from("assessments")
-                            .delete()
-                            .eq("id", selectedAssessment.id)
-
-                          if (!error) {
-                            setSelectedAssessment(null)
-                            setRefreshAssessments((v) => v + 1)
-                          }
-                        }}
-                        className="text-sm text-red-600 hover:text-red-800 border px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
+                    if (!error) {
+                      setSelectedAssessment(data)
+                    }
+                  }}
+                  className="w-24 border rounded px-2 py-1 text-sm"
+                />
+                
+                <span className="text-xs text-gray-500">
+                  Leave empty for unlimited
+                </span>
+              </div>
 
               <AssessmentBuilder
                 key={selectedAssessment.id}
                 tutorId={profile.id}
                 assessmentId={selectedAssessment.id}
-                initialSchema={selectedAssessment.schema}
-                onSave={async (schema) => {
+                initialSchema={selectedAssessment.survey_schema}
+                onSave={async (survey_schema) => {
                   const { data, error } = await supabase
                     .from("assessments")
-                    .update({ schema })
+                    .update({ survey_schema })
                     .eq("id", selectedAssessment.id)
                     .select()
                     .single()
@@ -414,35 +454,32 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                   alert("Assessment saved")
                 }}
               />
+
               <button
-              onClick={() =>
-                navigate(`/assessments/${selectedAssessment.id}/attempts`)
-              }
-              className="text-sm px-3 py-1 rounded border"
-            >
-              View Attempts
-            </button>
-
-                  
+                onClick={() =>
+                  navigate(`/assessments/${selectedAssessment.id}/attempts`)
+                }
+                className="text-sm px-3 py-1 rounded border mt-3"
+              >
+                View Attempts
+              </button>
             </div>
-            
           )}
-          {selectedAssessment && profile.role === "student" && (
-          <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
-            <h2 className="text-lg font-semibold text-black mb-3">
-              {selectedAssessment.title}
-            </h2>
-            
-            <AssessmentRunner
-              assessmentId={selectedAssessment.id}
-              studentId={profile.id}
-              schema={selectedAssessment.schema}
-              passingScore={selectedAssessment.passing_score}
-            />
-            
-          </div>
-        )}
 
+          {selectedAssessment && profile.role === "student" && (
+            <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
+              <h2 className="text-lg font-semibold text-black mb-3">
+                {selectedAssessment.title}
+              </h2>
+              
+              <AssessmentRunner
+                assessmentId={selectedAssessment.id}
+                studentId={profile.id}
+                schema={selectedAssessment.survey_schema}
+                passingScore={selectedAssessment.passing_score}
+              />
+            </div>
+          )}
         </div>
       </div>
     )}

@@ -18,6 +18,8 @@ import VideoChatWrapper from './pages/videochatWrapper'
 import CoursePageWrapper from './pages/courses/course-page-wrapper'
 import { MainLayout } from './components/main-layout'
 import { AssessmentAttemptsPage } from "./components/assessment/attempts-page"
+import { TutorProgressDashboard } from "./components/progress-dashboard"
+import { TutorStudentProgressPage } from "./components/student-progress"
 
 function WelcomePage() {
   return (
@@ -74,7 +76,9 @@ function App({ currentUserId }: { currentUserId: string }) {
 
       <Route path="learner-dashboard" element={<LearnerDashboard/>} />
       <Route path="tutor-dashboard" element={<TutorDashboard/>} />
-      
+
+      <Route path="/tutor/progress" element={<TutorProgressDashboard />} />
+      <Route path="/tutor/progress/:studentId/:gradeLevel" element={<TutorStudentProgressPage />}/>
 
       
       <Route element={<MainLayout/>}>
