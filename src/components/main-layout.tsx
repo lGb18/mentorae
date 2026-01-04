@@ -1,4 +1,3 @@
-// MainLayout.tsx
 import * as React from "react";
 import { AppSidebar } from "./app-sidebar";
 import { Outlet } from "react-router-dom";

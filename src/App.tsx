@@ -24,23 +24,20 @@ import { TutorStudentProgressPage } from "./components/student-progress"
 function WelcomePage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
-      <div className="w-full max-w-md bg-white border border-black rounded-md p-10"> {/* increased width & padding */}
-        {/* App Icon */}
+      <div className="w-full max-w-md bg-white border border-black rounded-md p-10"> 
         <div className="flex justify-center mb-8">
-          <div className="w-32 h-16 bg-black rounded-md flex items-center justify-center"> {/* larger icon */}
-            <span className="text-white font-semibold text-base">Mentorae</span> {/* larger text */}
+          <div className="w-32 h-16 bg-black rounded-md flex items-center justify-center"> 
+            <span className="text-white font-semibold text-base">Mentorae</span> 
           </div>
         </div>
 
-        {/* Title */}
         <div className="text-center mb-10">
-          <h1 className="text-2xl font-semibold text-black mb-2">Welcome</h1> {/* larger heading */}
+          <h1 className="text-2xl font-semibold text-black mb-2">Welcome</h1>
           <p className="text-sm text-black font-light">
             Continue to your account
           </p>
         </div>
 
-        {/* Action Buttons */}
         <div className="space-y-4">
           <Link
             to="/login"

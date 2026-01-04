@@ -22,7 +22,6 @@ export default function SidebarUser() {
 
     loadUser()
 
-    // subscribe to auth changes (sign in/out)
     const { data: listener } = supabase.auth.onAuthStateChange(() => {
       loadUser()
     })

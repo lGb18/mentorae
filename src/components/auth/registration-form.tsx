@@ -22,7 +22,7 @@ export function RegisterForm({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [role, setRole] = useState<Role>('student') // or 'teacher'
+  const [role, setRole] = useState<Role>('student') 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -43,10 +43,8 @@ export function RegisterForm({
       setLoading(true)
       const result = await signUp(email, password, role, name)
       if (result?.session) {
-        // immediate login - fetch profile will be handled by login flow
         navigate(role === 'teacher' ? "/tutor-dashboard" : "/learner-dashboard")
       } else {
-        // email confirmation flow, send user to login & inform
         alert("Account created — check your email for confirmation (if required).")
         navigate("/login")
       }

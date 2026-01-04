@@ -98,22 +98,6 @@ export default function TutorDashboard() {
   }
   
 
-  // const handleSubjectChange = (index: number, value: string) => {
-  //   const updated = [...profile.subjects_taught]
-  //   updated[index] = value
-  //   setProfile((prev: any) => ({ ...prev, subjects_taught: updated }))
-  // }
-
-  // const addSubject = () => {
-  //   setProfile((prev: any) => ({ ...prev, subjects_taught: [...prev.subjects_taught, ""] }))
-  // }
-
-  // const removeSubject = (index: number) => {
-  //   const updated = [...profile.subjects_taught]
-  //   updated.splice(index, 1)
-  //   setProfile((prev: any) => ({ ...prev, subjects_taught: updated }))
-  // }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)

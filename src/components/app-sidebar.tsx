@@ -22,33 +22,50 @@ import { supabase } from "@/lib/supabaseClient";
 import { useCurrentMatch } from "@/hooks/useCurrentMatch";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const matchId = useCurrentMatch(); // get current matchId dynamically
+  const matchId = useCurrentMatch(); 
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [role, setRole] = useState<"teacher" | "student" | null>(null)
 
-  // Fetch current user ID
   useEffect(() => {
-    async function fetchUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) setUserId(session.user.id);
-    }
-    fetchUser();
-  }, []);
+  async function fetchUser() {
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
 
-  // Fetch tutor-owned subjects
+    if (!user) return
+
+    setUserId(user.id)
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+
+    if (profile?.role) {
+      setRole(profile.role)
+    }
+  }
+
+  fetchUser()
+}, [])
+
+
   useEffect(() => {
-    if (!userId) return;
+  if (!userId || role !== "teacher") return
 
-    async function fetchSubjects() {
-      const { data } = await supabase
-        .from("subjects")
-        .select("*")
-        .eq("tutor_id", userId);
-      setSubjects(data || []);
-    }
+  async function fetchSubjects() {
+    const { data } = await supabase
+      .from("subjects")
+      .select("id, name")
+      .eq("tutor_id", userId)
 
-    fetchSubjects();
-  }, [userId]);
+    setSubjects(data || [])
+  }
+
+  fetchSubjects()
+}, [userId, role])
+
 
   const navMain = [
     {
@@ -68,18 +85,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Courses",
       url: "#",
       items: [
-        {
-          title: "+ Create Subject",
-          url: "/create-subject",
-          isActive: false,
-        },
-        ...subjects.map((s) => ({
-          title: s.name,
-          url: `/courses/${s.name}/${s.id}`,
-          isActive: false,
-        })),
+        ...(role === "teacher"
+          ? [
+              {
+                title: "Create Subject +",
+                url: "/create-subject",
+                isActive: false,
+              },
+              ...subjects.map((s) => ({
+                title: s.name,
+                url: `/courses/${s.name}/${s.id}`,
+                isActive: false,
+              })),
+            ]
+          : [
+              {
+                title: "My Courses",
+                url: "#",
+                isActive: false,
+              },
+            ]),
       ],
     },
+
     {
       title: "Meetings",
       url: "#",
@@ -87,15 +115,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Schedule", url: "#" },
         { title: "Join", url: matchId ? `/join/${matchId}` : "#" },
         { title: "History", url: "#" },
-        { title: "Chat Messages", url: "/chats" },
+        // { title: "Chat Messages", url: "/chats" },
       ],
     },
     {
       title: "Settings",
       url: "#",
       items: [
-        { title: "Themes", url: "#" },
-        { title: "Update", url: "#" },
+        // { title: "Themes", url: "#" },
+        // { title: "Update", url: "#" },
         { title: "About", url: "#" },
       ],
     },

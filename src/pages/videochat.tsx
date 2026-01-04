@@ -25,7 +25,6 @@ export default function VideoChat({ match, user }: VideoChatProps) {
   const myVideo = useRef<HTMLVideoElement | null>(null);
   const remoteVideo = useRef<HTMLVideoElement | null>(null);
 
-  // helper to safely get user media
   async function safeGetUserMedia() {
     try {
       return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -40,20 +39,17 @@ export default function VideoChat({ match, user }: VideoChatProps) {
     }
   }
 
-  // 1. Init PeerJS + reuse/save Peer ID in Supabase
   useEffect(() => {
     if (!user) return;
 
     const timer = setTimeout(() => {
       (async () => {
-        // ✅ Fetch or reuse peer_id for this user
         const { data } = await supabase
           .from("profiles")
           .select("peer_id")
           .eq("id", user.id)
           .single();
 
-        // ✅ Reuse existing peer_id if available, otherwise generate new one
         const currentPeerId =
           data?.peer_id || `${user.id}-${crypto.randomUUID().slice(0, 6)}`;
 
@@ -71,7 +67,6 @@ export default function VideoChat({ match, user }: VideoChatProps) {
 
         newPeer.on("open", async (id: string) => {
           console.log("My PeerJS ID:", id);
-          // Only update if missing or changed
           if (!data?.peer_id || data.peer_id !== id) {
             await supabase.from("profiles").update({ peer_id: id }).eq("id", user.id);
           }
@@ -105,7 +100,6 @@ export default function VideoChat({ match, user }: VideoChatProps) {
     return () => clearTimeout(timer);
   }, [user]);
 
-  // 2. Get remote peer_id once matchmaking is ready
   useEffect(() => {
     const fetchRemotePeer = async () => {
       if (!match || !user) return;
@@ -127,7 +121,6 @@ export default function VideoChat({ match, user }: VideoChatProps) {
     fetchRemotePeer();
   }, [match, user]);
 
-  // 3. Start call if remotePeerId is found
   const callRemote = async () => {
     if (!peer || !remotePeerId || inCall) return;
     const stream = await safeGetUserMedia();
@@ -151,7 +144,6 @@ export default function VideoChat({ match, user }: VideoChatProps) {
 const [audioEnabled, setAudioEnabled] = useState(true);
 const [videoEnabled, setVideoEnabled] = useState(true);
 
-  // Toggle functions
   const toggleAudio = () => {
     if (myVideo.current?.srcObject instanceof MediaStream) {
       const tracks = myVideo.current.srcObject.getAudioTracks();
@@ -172,7 +164,6 @@ const [videoEnabled, setVideoEnabled] = useState(true);
     }
   };
 
-  // Update your existing end call function to reset states
   const endCall = () => {
     if (myVideo.current?.srcObject instanceof MediaStream) {
       myVideo.current.srcObject.getTracks().forEach((t) => t.stop());
@@ -183,13 +174,13 @@ const [videoEnabled, setVideoEnabled] = useState(true);
       remoteVideo.current.srcObject = null;
     }
     setInCall(false);
-    setAudioEnabled(true); // Reset for next call
-    setVideoEnabled(true); // Reset for next call
+    setAudioEnabled(true); 
+    setVideoEnabled(true); 
   };
 
   return (
    <div>
-  {/* Peer IDs info - More compact and subtle */}
+
   <div style={{ 
     marginBottom: 20, 
     fontSize: 11, 
@@ -205,7 +196,7 @@ const [videoEnabled, setVideoEnabled] = useState(true);
     </div>
   </div>
 
-  {/* Video container with clean borders */}
+ 
   <div style={{ 
     display: "flex", 
     justifyContent: "center", 
@@ -242,7 +233,6 @@ const [videoEnabled, setVideoEnabled] = useState(true);
     />
   </div>
 
-  {/* Enhanced control buttons - Sharp black/white theme */}
   <div style={{ 
     display: "flex", 
     gap: 12, 
@@ -303,7 +293,6 @@ const [videoEnabled, setVideoEnabled] = useState(true);
         </button>
         <button
           onClick={() => {
-            // Stop all media tracks
             if (myVideo.current?.srcObject instanceof MediaStream) {
               myVideo.current.srcObject.getTracks().forEach((t) => t.stop());
               myVideo.current.srcObject = null;
@@ -312,7 +301,6 @@ const [videoEnabled, setVideoEnabled] = useState(true);
               remoteVideo.current.srcObject.getTracks().forEach((t) => t.stop());
               remoteVideo.current.srcObject = null;
             }
-            // Reset state
             setInCall(false);
             setAudioEnabled(true);
             setVideoEnabled(true);

@@ -23,7 +23,7 @@ export function TriggerExtensionPanel({
         subject_id: subjectId,
         grade_level: gradeLevel,
         reason,
-        status: "pending", // important
+        status: "pending",
       })
 
     setSaving(false)

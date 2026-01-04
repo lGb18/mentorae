@@ -83,7 +83,6 @@ export default function SubjectEditor({ subjectName, gradeLevel, tutorId }: Subj
     setSaveStatus('Error saving content');
   } finally {
     setIsSaving(false);
-    // Clear status message after 3 seconds
     setTimeout(() => setSaveStatus(''), 3000);
   }
 };

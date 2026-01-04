@@ -141,7 +141,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
     if (!confirmed) return;
 
     try {
-      // 1. Delete the subject
       const { error: deleteError } = await supabase
         .from("subjects")
         .delete()
@@ -149,7 +148,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
       if (deleteError) throw deleteError;
 
-      // 2. Update subjects_taught in tutor profile
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) throw new Error("Tutor session not found");
       const tutorId = session.user.id;
@@ -170,7 +168,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
       alert(`Subject "${subject}" deleted successfully.`);
 
-      // 3. Navigate to Create Subject page
       navigate("/create-subject");
     } catch (err) {
       console.error("Failed to delete subject:", err);
@@ -181,13 +178,11 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
   return (
   <div className="max-w-4xl mx-auto p-6 space-y-8">
-    {/* Header */}
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <h1 className="text-2xl sm:text-3xl font-bold text-black tracking-tight">
         {subject.toUpperCase()}
       </h1>
 
-      {/* Tabs */}
       <div className="inline-flex w-fit rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
         <button
           onClick={() => setActiveTab("content")}
@@ -213,7 +208,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
       </div>
     </div>
 
-    {/* ================= CONTENT TAB ================= */}
+    {/*CONTENT TAB */}
     {activeTab === "content" && (
       <div className="space-y-6">
         {/* Teacher Panel */}
@@ -251,7 +246,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
                 </div>
               </div>
 
-              {/* Grade selector */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <label className="text-sm font-medium text-black">
                   Select Level:
@@ -297,7 +291,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
       </div>
     )}
 
-    {/* ================= ASSESSMENTS TAB ================= */}
+    {/*  ASSESSMENTS TAB */}
     {activeTab === "assessments" && (
       <div key={refreshAssessments}
             className="grid grid-cols-1 lg:grid-cols-3 gap-6">

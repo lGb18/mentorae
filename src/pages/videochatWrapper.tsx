@@ -12,24 +12,13 @@ type Match = {
 export default function VideoChatWrapper() {
   const { matchId } = useParams<{ matchId: string }>();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  // const params = useParams();
-  
-
-  // console.log("🔍 All params:", params);
-  // console.log("🔍 matchId param:", params.matchId);
-  // console.log("🔍 location object:", location);
-
-  // console.log("🔍 matchId from useParams:", matchId);
-  // console.log("🔍 Current URL:", window.location.href);
-  
+ 
   const [match, setMatch] = useState<Match | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if current route is join route
   const isJoinRoute = location.pathname.includes('/join/');
 
-  // Your existing data loading logic remains the same
   useEffect(() => {
     const loadData = async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -57,7 +46,6 @@ export default function VideoChatWrapper() {
     loadData();
   }, [matchId]);
 
-  // Conditionally render different UI based on route
   return (
     <div style={{ padding: 16 }}>
       <h1 style={{ margin: "0 0 16px 0", fontSize: 20, fontWeight: 600 }}>

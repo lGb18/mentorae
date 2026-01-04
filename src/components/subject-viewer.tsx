@@ -30,7 +30,7 @@ export default function SubjectViewer({ subjectId, gradeLevel }: SubjectViewerPr
 
   useEffect(() => {
     const fetchContent = async () => {
-      console.log("🎯 SubjectViewer Props:", { subjectId, gradeLevel });
+      console.log(" SubjectViewer Props:", { subjectId, gradeLevel });
       if (!resolvedId) return
       console.log("SubjectViewer fetching content for:", {
       subject_id: resolvedId,
