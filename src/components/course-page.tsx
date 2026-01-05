@@ -8,6 +8,7 @@ import { AssessmentList } from "@/components/assessment/assessment-list"
 import { AssessmentBuilder } from "@/components/assessment/assess-builder"
 import { AssessmentRunner } from "@/components/assessment/assess-runner"
 import { Survey } from "survey-react";
+import { SendClassReminderButton } from "./notifications/reminder-button";
 
 type Profile = {
   id: string;
@@ -68,7 +69,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
         if (error) throw error;
         setProfile(profileData);
 
-        // For teachers: check if they have content
         if (profileData.role === "teacher") {
           const { data: contentData } = await supabase
             .from("subject_content")
@@ -80,7 +80,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
           if (contentData) setHasContent(true);
         } else {
-          // For students: find matched tutor
           const subjectForMatch = subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
           const { data: matchData } = await supabase
             .from("matches")
@@ -94,7 +93,6 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
           if (matchData) {
             setMatchedTutorId(matchData.tutor_id);
 
-            // Check if matched tutor has content
             const { data: contentData } = await supabase
               .from("subject_content")
               .select("*")
@@ -222,11 +220,12 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <NavLink
-                    to={`/tutor/progress/${subjectId}/${selectedGrade}`}
-                    className="text-sm text-gray-700 hover:underline"
-                  >
-                    Student Progress
-                  </NavLink>
+                  to="/tutor/progress"
+                  className="text-sm text-gray-700 hover:underline"
+                >
+                  Student Progress
+                </NavLink>
+
 
                   {!hasContent && (
                     <button

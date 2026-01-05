@@ -4,44 +4,72 @@ import { supabase } from "@/lib/supabaseClient"
 import { AssessmentAttemptsPanel } from "@/components/assessment/attempts-panel"
 import { LessonProgressViewer } from "@/components/course-progress"
 import { toast } from "sonner"
+import { profile } from "node:console"
+import { SendClassReminderButton } from "./notifications/reminder-button"
+
+type SubjectRow = {
+  subject_id: string
+  subjects: {
+    id: string
+    name: string
+  }[]
+}
+
+type StudentProfile = {
+  id: string
+  display_name: string
+  email: string
+}
 
 export function TutorStudentProgressPage() {
-  const { studentId, gradeLevel } = useParams()
+  const { studentId, gradeLevel } = useParams<{
+    studentId: string
+    gradeLevel: string
+  }>()
+
   const navigate = useNavigate()
 
-  const [student, setStudent] = useState<any | null>(null)
-  const [subjects, setSubjects] = useState<any[]>([])
+  const [student, setStudent] = useState<StudentProfile | null>(null)
+  const [subjects, setSubjects] = useState<SubjectRow[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Guard: invalid route
+  if (!studentId || !gradeLevel) {
+    return (
+      <p className="p-6 text-sm text-gray-500">
+        Invalid progress page
+      </p>
+    )
+  }
 
   useEffect(() => {
     async function load() {
-      if (!studentId || !gradeLevel) return
-
       setLoading(true)
 
-      const [{ data: studentData }, { data: matches }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, display_name, email")
-          .eq("id", studentId)
-          .maybeSingle(),
+      const [{ data: studentData }, { data: matches }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id, display_name, email")
+            .eq("id", studentId)
+            .maybeSingle(),
 
-        supabase
-          .from("matches")
-          .select(`
-            subject_id,
-            subjects (
-              id,
-              name
-            )
-          `)
-          .eq("student_id", studentId)
-          .eq("grade_level", gradeLevel)
-          .eq("status", "active"),
-      ])
+          supabase
+            .from("matches")
+            .select(`
+              subject_id,
+              subjects (
+                id,
+                name
+              )
+            `)
+            .eq("student_id", studentId)
+            .eq("grade_level", gradeLevel)
+            .eq("status", "active"),
+        ])
 
       setStudent(studentData)
-      setSubjects(matches ?? [])
+      setSubjects((matches as SubjectRow[]) ?? [])
       setLoading(false)
     }
 
@@ -56,35 +84,23 @@ export function TutorStudentProgressPage() {
     )
   }
 
-  if (student === null) {
-  return (
-    <div className="max-w-3xl mx-auto p-6">
-      <p className="text-sm text-gray-600 mb-2">
-        Student not found or no longer enrolled.
-      </p>
+  // Student no longer exists / unmatched
+  if (!student) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <p className="text-sm text-gray-600 mb-3">
+          Student not found or no longer enrolled.
+        </p>
 
-      <p className="text-xs text-gray-400 mb-4">
-        Redirecting back to the course page…
-      </p>
-
-      <button
-        onClick={() => navigate(-1)}
-        className="text-sm text-blue-600 hover:underline"
-      >
-        ← Back to Course
-      </button>
-    </div>
-  )
-}
-
-
-  if (!studentId || !gradeLevel) {
-  return (
-    <p className="text-sm text-gray-500">
-      Invalid progress page
-    </p>
-  )
-}
+        <button
+          onClick={() => navigate("/tutor/progress")}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
@@ -110,26 +126,37 @@ export function TutorStudentProgressPage() {
       {/* Subjects */}
       {subjects.length === 0 && (
         <p className="text-sm text-gray-500">
-          No active subjects
+          No active subjects for this student.
         </p>
       )}
 
-      {subjects.map((s) => (
-        <div
-          key={s.subjects.id}
-          className="bg-white border rounded-lg p-4"
-        >
-          <h2 className="text-lg font-semibold mb-3">
-            {s.subjects.name}
-          </h2>
-           <LessonProgressViewer
-            studentId={studentId}
-            subjectId={s.subjects.id}
-            gradeLevel={gradeLevel}
-          />
-          
-        </div>
-      ))}
+      {subjects.map((row) => {
+        const subject = row.subjects[0]
+        if (!subject) return null
+
+        return (
+          <div
+            key={subject.id}
+            className="bg-white border rounded-lg p-4 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">
+                {subject.name}
+              </h2>
+
+              <SendClassReminderButton
+                studentId={student.id}
+                subjectName={subject.name} tutorName={""}              />
+            </div>
+
+            <LessonProgressViewer
+              studentId={student.id}
+              subjectId={subject.id}
+              gradeLevel={gradeLevel}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }
