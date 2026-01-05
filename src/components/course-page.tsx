@@ -38,7 +38,37 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   const [savingTitle, setSavingTitle] = useState(false)
   const [activeAttempt, setActiveAttempt] = useState<any | null>(null)
 
-  
+
+  const [modules, setModules] = useState<any[]>([])
+  const [lessons, setLessons] = useState<any[]>([])
+  const [activeLesson, setActiveLesson] = useState<any | null>(null)
+
+  useEffect(() => {
+  async function fetchStructure() {
+    if (!hasContent) return
+
+    const { data: moduleData } = await supabase
+      .from("subject_modules")
+      .select("*")
+      .eq("subject_id", subjectId)
+      .eq("grade_level", `Grade ${selectedGrade}`)
+      .order("order_index")
+
+    const { data: lessonData } = await supabase
+      .from("subject_lessons")
+      .select("*")
+      .eq("subject_id", subjectId)
+      .eq("grade_level", `Grade ${selectedGrade}`)
+      .order("order_index")
+
+    setModules(moduleData ?? [])
+    setLessons(lessonData ?? [])
+    setActiveLesson(null)
+  }
+
+  fetchStructure()
+}, [subjectId, selectedGrade, hasContent])
+
   useEffect(() => {
     if (selectedAssessment) {
       setTitle(selectedAssessment.title)
@@ -280,10 +310,20 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
             <div className="p-6">
               <SubjectEditor
-                subjectName={subject}
-                gradeLevel={`Grade ${selectedGrade}`}
-                tutorId={profile.id}
-              />
+                  subjectName={subject}
+                  gradeLevel={`Grade ${selectedGrade}`}
+                  tutorId={profile.id} lessonId={""}              />
+            </div>
+          </div>
+        )}
+        {/* Subject Viwer */}
+        {profile.role === "student" && hasContent && (
+          <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+            <div className="p-6">
+              <SubjectViewer
+                  subjectId={subjectId}
+                  gradeLevel={`Grade ${selectedGrade}`}
+                               />
             </div>
           </div>
         )}

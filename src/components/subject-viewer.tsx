@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 
 type SubjectViewerProps = {
-  subjectId: string // can be UUID or subject name
+  subjectId: string 
   gradeLevel: string
 }
 

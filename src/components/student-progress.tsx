@@ -33,7 +33,6 @@ export function TutorStudentProgressPage() {
   const [subjects, setSubjects] = useState<SubjectRow[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Guard: invalid route
   if (!studentId || !gradeLevel) {
     return (
       <p className="p-6 text-sm text-gray-500">
@@ -84,7 +83,6 @@ export function TutorStudentProgressPage() {
     )
   }
 
-  // Student no longer exists / unmatched
   if (!student) {
     return (
       <div className="max-w-3xl mx-auto p-6">
