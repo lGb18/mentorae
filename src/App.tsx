@@ -74,7 +74,6 @@ function App({ currentUserId }: { currentUserId: string }) {
       <Route path="learner-dashboard" element={<LearnerDashboard/>} />
       <Route path="tutor-dashboard" element={<TutorDashboard/>} />
 
-      <Route path="/tutor/progress" element={<TutorProgressDashboard />} />
       <Route path="/tutor/progress/:studentId/:gradeLevel" element={<TutorStudentProgressPage />}/>
 
       
@@ -90,38 +89,14 @@ function App({ currentUserId }: { currentUserId: string }) {
         <Route path="/join/:matchId" element={< VideoChatWrapper/>} />
         <Route path="/assessments/:assessmentId/attempts"element={<AssessmentAttemptsPage />}
 />
+              <Route path="/tutor/progress" element={<TutorProgressDashboard />} />
+
       </Route>
 
 
 
     </Routes>
    
-    // <div className='App'>
-    //   <div className='logo-box'>
-    //     <a href='https://github.com/electron-vite/electron-vite-react' target='_blank'>
-    //       <img src={logoM} className='logo vite' alt='M' />
-          
-    //     </a>
-    //   </div>
-    //   <h1>Mentorae</h1>
-    //   <div className='card'>
-    //     <button onClick={() => setCount((count) => count + 1)}>
-    //       count is {count}
-    //     </button>
-    //     <LoginForm/>
-    //     <p>
-    //       Edit <code>src/App.tsx</code> and save to test HMR
-    //     </p>
-    //   </div>
-    //   <p className='read-the-docs'>
-    //     Learn More
-    //   </p>
-    //   <div className='flex-center'>
-    //     Place static files into the<code>/public</code> folder <img style={{ width: '5em' }} src='./node.svg' alt='Node logo' />
-    //   </div>
-
-    //   <UpdateElectron />
-    // </div>
   )
 }
 

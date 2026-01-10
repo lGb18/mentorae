@@ -49,7 +49,7 @@ export function AssessmentList({
         subject_id: subjectId,
         grade_level: gradeLevel,
         title: "New Assessment",
-        schema: { elements: [] },
+        survey_schema: { elements: [] },
       })
       .select()
       .single()

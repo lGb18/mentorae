@@ -1,66 +1,91 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 
 type SubjectViewerProps = {
-  subjectId: string 
+  subjectId: string
   gradeLevel: string
+  tutorId: string
 }
 
-export default function SubjectViewer({ subjectId, gradeLevel }: SubjectViewerProps) {
-  const [content, setContent] = useState("")
-  const [resolvedId, setResolvedId] = useState<string | null>(null)
+export default function SubjectViewer({
+  subjectId,
+  gradeLevel,
+  tutorId,
+}: SubjectViewerProps) {
+  const [html, setHtml] = useState("")
+  const hasTrackedView = useRef(false)
+  
 
+  console.log(" SubjectViewer render:", { subjectId, gradeLevel, tutorId });
   useEffect(() => {
-    
-    const resolveSubjectId = async () => {
-      if (subjectId.includes("-")) {
-        
-        setResolvedId(subjectId)
-      } else {
-        const { data, error } = await supabase
-          .from("subjects")
-          .select("id")
-          .eq("name", subjectId)
-          .single()
-        if (!error && data) setResolvedId(data.id)
-      }
-    }
-    resolveSubjectId()
-  }, [subjectId])
-
-  useEffect(() => {
-    const fetchContent = async () => {
-      console.log(" SubjectViewer Props:", { subjectId, gradeLevel });
-      if (!resolvedId) return
-      console.log("SubjectViewer fetching content for:", {
-      subject_id: resolvedId,
-      grade_level: gradeLevel
-    });
+    async function fetchContent() {
       const { data, error } = await supabase
         .from("subject_content")
         .select("content")
-        .eq("subject_id", resolvedId)
-        .eq("grade_level", gradeLevel)
-        .single()
+        .eq("subject_id", subjectId)
+        .eq("tutor_id", tutorId)
+        .in("grade_level", [
+          gradeLevel,
+          gradeLevel.replace("Grade ", ""),
+          "unspecified",
+        ])
+        .maybeSingle()
+      console.log("SubjectViewer fetch", { subjectId, tutorId, gradeLevel, data, error })
+      if (error) {
+        console.error("SubjectViewer error:", error)
+        return
+      }
 
-       if (error) {
-        
-        if (error.code === "PGRST116") {
-          setContent("No tutor has been assigned yet.")
-        } else {
-          console.error("Error loading content:", error)
-        }
+      const raw = data?.content
+
+      if (typeof raw === "string") {
+        // backward compatibility (old rows)
+        setHtml(raw)
+      } else if (raw?.html) {
+        setHtml(raw.html)
       } else {
-        setContent(data?.content || "")
+        setHtml("")
       }
     }
-    fetchContent()
-  }, [resolvedId, gradeLevel])
-  
+
+    if (subjectId && tutorId) fetchContent()
+  }, [subjectId, tutorId, gradeLevel])
+  useEffect(() => {
+  if (!subjectId || !tutorId) return
+  if (hasTrackedView.current) return
+
+  const trackView = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) return
+
+    hasTrackedView.current = true
+
+    await supabase.from("subject_views").insert({
+      student_id: user.id,
+      subject_id: subjectId,
+      tutor_id: tutorId,
+    })
+  }
+
+  trackView()
+}, [subjectId, tutorId])
+
+
+  if (!html) {
+    return (
+      <p className="text-sm text-gray-500">
+        No content available yet.
+      </p>
+    )
+  }
+
   return (
     <div
       className="prose max-w-none"
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   )
 }

@@ -46,7 +46,7 @@ export default function Matchmaking() {
       user_id: p.id,
       role: p.role,
       subjects: subjects.length ? subjects : ["General"],
-      grade_level: p.grade_level ?? "unspecified",
+      grade_level: p.grade_level ?? "5",
       status: "searching",
     }
 
@@ -85,8 +85,10 @@ export default function Matchmaking() {
           student_id: p.role === "student" ? p.id : existing.user_id,
           tutor_id: p.role === "teacher" ? p.id : existing.user_id,
           subject,
-          grade_level: p.grade_level ?? "unspecified",
+          grade_level: p.grade_level ?? "5",
           status: "active",
+          student_confirmed: false,
+         tutor_confirmed: false,
         },
       ])
 

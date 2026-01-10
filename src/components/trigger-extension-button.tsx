@@ -30,9 +30,9 @@ export function TriggerExtensionButton({
   return (
     <button
       onClick={trigger}
-      className="text-sm px-3 py-1 rounded border text-red-600 hover:bg-red-50"
+      className="text-xs px-3 py-1 rounded border text-red-600 hover:bg-red-50"
     >
-      Trigger Extension
+       Extension
     </button>
   )
 }

@@ -6,6 +6,7 @@ import { LessonProgressViewer } from "@/components/course-progress"
 import { toast } from "sonner"
 import { profile } from "node:console"
 import { SendClassReminderButton } from "./notifications/reminder-button"
+import { endMatch } from "@/hooks/end-match"
 
 type SubjectRow = {
   subject_id: string
@@ -28,6 +29,7 @@ export function TutorStudentProgressPage() {
   }>()
 
   const navigate = useNavigate()
+  const [hasActiveExtension, setHasActiveExtension] = useState(false)
 
   const [student, setStudent] = useState<StudentProfile | null>(null)
   const [subjects, setSubjects] = useState<SubjectRow[]>([])
@@ -35,9 +37,13 @@ export function TutorStudentProgressPage() {
 
   if (!studentId || !gradeLevel) {
     return (
-      <p className="p-6 text-sm text-gray-500">
-        Invalid progress page
-      </p>
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="border border-white/20 rounded-2xl p-8 max-w-md text-center space-y-3">
+          <p className="text-sm text-gray-200">
+            Invalid progress page
+          </p>
+        </div>
+      </div>
     )
   }
 
@@ -45,30 +51,56 @@ export function TutorStudentProgressPage() {
     async function load() {
       setLoading(true)
 
-      const [{ data: studentData }, { data: matches }] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select("id, display_name, email")
-            .eq("id", studentId)
-            .maybeSingle(),
+      const { data: extension } = await supabase
+        .from("tutor_extensions")
+        .select("id")
+        .eq("student_id", studentId)
+        .eq("grade_level", gradeLevel)
+        .maybeSingle()
 
-          supabase
-            .from("matches")
-            .select(`
-              subject_id,
-              subjects (
-                id,
-                name
-              )
-            `)
-            .eq("student_id", studentId)
-            .eq("grade_level", gradeLevel)
-            .eq("status", "active"),
-        ])
+      setHasActiveExtension(!!extension)
+
+      const { data: studentData } = await supabase
+        .from("profiles")
+        .select("id, display_name, email")
+        .eq("id", studentId)
+        .maybeSingle()
 
       setStudent(studentData)
-      setSubjects((matches as SubjectRow[]) ?? [])
+
+      if (!studentData) {
+        setSubjects([])
+        setLoading(false)
+        return
+      }
+
+      const { data: matches } = await supabase
+        .from("matches")
+        .select("subject")
+        .eq("student_id", studentId)
+        .eq("grade_level", gradeLevel)
+        .eq("status", "active")
+
+      if (!matches || matches.length === 0) {
+        setSubjects([])
+        setLoading(false)
+        return
+      }
+
+      const subjectNames = matches.map((m) => m.subject)
+
+      const { data: subjectsData } = await supabase
+        .from("subjects")
+        .select("id, name")
+        .in("name", subjectNames)
+
+      const rows: SubjectRow[] =
+        subjectsData?.map((s) => ({
+          subject_id: s.id,
+          subjects: [s],
+        })) ?? []
+
+      setSubjects(rows)
       setLoading(false)
     }
 
@@ -77,84 +109,114 @@ export function TutorStudentProgressPage() {
 
   if (loading) {
     return (
-      <div className="p-6 text-sm text-gray-500">
-        Loading student progress…
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="border border-white/30 rounded-2xl p-8 max-w-sm text-center space-y-3">
+          <p className="text-sm text-gray-300">
+            Loading student progress…
+          </p>
+        </div>
       </div>
     )
   }
 
   if (!student) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
-        <p className="text-sm text-gray-600 mb-3">
-          Student not found or no longer enrolled.
-        </p>
-
-        <button
-          onClick={() => navigate("/tutor/progress")}
-          className="text-sm text-blue-600 hover:underline"
-        >
-          ← Back to Dashboard
-        </button>
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="w-full max-w-xl border border-white/20 rounded-3xl p-8 space-y-4">
+          <p className="text-sm text-gray-300">
+            Student not found or no longer enrolled.
+          </p>
+          <button
+            onClick={() => navigate("/tutor/progress")}
+            className="text-sm text-black underline underline-offset-2 hover:text-black-200 transition"
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">
-            {student.display_name}
-          </h1>
-          <p className="text-sm text-gray-600">
-            Grade {gradeLevel}
-          </p>
+    <div className="min-h-screen bg-neutral-950 text-white">
+      <div className="max-w-5xl mx-auto py-10 px-4 space-y-8">
+        <div className="bg-black/70 border border-white/10 rounded-3xl p-6 shadow-xl space-y-6">
+          <header className="flex items-start justify-between gap-6">
+            <div>
+              <h1 className="text-2xl font-semibold leading-snug">
+                {student.display_name}
+              </h1>
+              <p className="text-sm text-gray-300 mt-1">
+                Grade {gradeLevel}
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/tutor/progress")}
+              className="text-sm text-gray-300 hover:text-white transition"
+            >
+              ← Back to Dashboard
+            </button>
+          </header>
+
+          <section className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={endMatch}
+              disabled={hasActiveExtension}
+              className={`px-4 py-2 rounded-full text-sm font-semibold border ${
+                hasActiveExtension
+                  ? "border-black-500 text-gray-500 cursor-not-allowed bg-white/5"
+                  : "border-black/20 text-black hover:bg-white/10"
+              } transition`}
+            >
+              End Match
+            </button>
+            {hasActiveExtension && (
+              <span className="text-xs text-amber-400">
+                Match cannot be ended while an extension is active.
+              </span>
+            )}
+          </section>
         </div>
 
-        <button
-          onClick={() => navigate("/tutor/progress")}
-          className="text-sm text-gray-600 hover:underline"
-        >
-          ← Back to Dashboard
-        </button>
-      </div>
-
-      {/* Subjects */}
-      {subjects.length === 0 && (
-        <p className="text-sm text-gray-500">
-          No active subjects for this student.
-        </p>
-      )}
-
-      {subjects.map((row) => {
-        const subject = row.subjects[0]
-        if (!subject) return null
-
-        return (
-          <div
-            key={subject.id}
-            className="bg-white border rounded-lg p-4 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
-                {subject.name}
-              </h2>
-
-              <SendClassReminderButton
-                studentId={student.id}
-                subjectName={subject.name} tutorName={""}              />
-            </div>
-
-            <LessonProgressViewer
-              studentId={student.id}
-              subjectId={subject.id}
-              gradeLevel={gradeLevel}
-            />
+        {subjects.length === 0 ? (
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
+            <p className="text-sm text-gray-300">
+              No active subjects for this student.
+            </p>
           </div>
-        )
-      })}
+        ) : (
+          <div className="space-y-6">
+            {subjects.map((row) => {
+              const subject = row.subjects[0]
+              if (!subject) return null
+
+              return (
+                <div
+                  key={subject.id}
+                  className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-5 shadow-inner"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-lg font-semibold">
+                      {subject.name}
+                    </h2>
+                    <SendClassReminderButton
+                      studentId={student.id}
+                      subjectName={subject.name}
+                      tutorName={""}
+                    />
+                  </div>
+
+                  <LessonProgressViewer
+                    studentId={student.id}
+                    subjectId={subject.id}
+                    gradeLevel={gradeLevel}
+                  />
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

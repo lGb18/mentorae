@@ -25,47 +25,40 @@ Please make sure you're ready for the session.
   const [message, setMessage] = useState(defaultMessage)
 
   async function send() {
-    setLoading(true)
+  setLoading(true)
 
-    const { data: student } = await supabase
-      .from("profiles")
-      .select("email, display_name")
-      .eq("id", studentId)
-      .single()
-
-    if (!student?.email) {
-      alert("Student email not found")
-      setLoading(false)
-      return
-    }
-
-    const res = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${
-            (await supabase.auth.getSession()).data.session?.access_token
-          }`,
-        },
-        body: JSON.stringify({
-          to: student.email,
-          title: `Class Reminder — ${subjectName}`,
-          message,
-        }),
-      }
-    )
-
-    setLoading(false)
-    setOpen(false)
-
-    if (!res.ok) {
-      alert("Failed to send reminder")
-    } else {
-      alert("Reminder sent")
-    }
+  const { data, error } = await supabase.functions.invoke(
+  "send-notification-email",
+  {
+    body: {
+      type: "class_reminder",
+      studentId,
+      subjectName,
+      tutorName,
+      message,
+    },
   }
+)
+
+if (error) {
+  console.error("Edge Function error:", error)
+
+  // 🔥 THIS is where your real JSON error lives
+  const res = error.context
+  if (res) {
+    const text = await res.text()
+    console.error("Edge Function response body:", text)
+  }
+
+  alert("Failed to send reminder (check console)")
+  return
+}
+
+console.log("Success:", data)
+alert("Reminder sent")
+
+}
+
 
   return (
     <>

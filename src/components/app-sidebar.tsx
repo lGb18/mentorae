@@ -26,6 +26,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<"teacher" | "student" | null>(null)
+  useEffect(() => {
+    if (!userId || role !== "student") return;
+
+    async function fetchTutorSubjects() {
+      // 1. Find the student's active match
+      const { data: match } = await supabase
+        .from("matches")
+        .select("tutor_id")
+        .eq("student_id", userId)
+        .eq("status", "active")
+        .eq("student_confirmed", true)
+        .eq("tutor_confirmed", true)
+        .limit(1)
+        .single();
+
+      if (!match?.tutor_id) return;
+
+      // 2. Fetch subjects taught by the matched tutor
+      const { data: subjectsData } = await supabase
+        .from("subjects")
+        .select("id, name")
+        .eq("tutor_id", match.tutor_id);
+
+      setSubjects(subjectsData || []);
+    }
+
+    fetchTutorSubjects();
+  }, [userId, role]);
 
   useEffect(() => {
   async function fetchUser() {
@@ -82,31 +110,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       items: [{ title: "Find a Match", url: "/matchmaking" }],
     },
     {
-      title: "Courses",
-      url: "#",
-      items: [
-        ...(role === "teacher"
-          ? [
-              {
-                title: "Create Subject +",
-                url: "/create-subject",
-                isActive: false,
-              },
-              ...subjects.map((s) => ({
-                title: s.name,
-                url: `/courses/${s.name}/${s.id}`,
-                isActive: false,
-              })),
-            ]
-          : [
-              {
-                title: "My Courses",
-                url: "#",
-                isActive: false,
-              },
-            ]),
-      ],
-    },
+  title: "Courses",
+  url: "#",
+  items: [
+    ...(role === "teacher"
+      ? [
+          {
+            title: "Create Subject +",
+            url: "/create-subject",
+            isActive: false,
+          },
+          ...subjects.map((s) => ({
+            title: s.name,
+            url: `/courses/${s.name}/${s.id}`,
+            isActive: false,
+          })),
+        ]
+      : [
+          // Student sees subjects from matched tutor
+          ...subjects.map((s) => ({
+            title: s.name,
+            url: `/courses/${s.name}/${s.id}`,
+            isActive: false,
+          })),
+        ]),
+  ],
+},
+
 
     {
       title: "Meetings",

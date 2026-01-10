@@ -23,10 +23,11 @@ type CoursePageProps = {
 };
 
 export default function CoursePage({ subject, subjectId }: CoursePageProps) {
+  console.log(" CoursePage mount:", { subject, subjectId });
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasContent, setHasContent] = useState(false);
-  const [selectedGrade, setSelectedGrade] = useState("1");
+  const [selectedGrade, setSelectedGrade] = useState("5");
   const [matchedTutorId, setMatchedTutorId] = useState<string | null>(null);
   const navigate = useNavigate();
   
@@ -38,36 +39,41 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
   const [savingTitle, setSavingTitle] = useState(false)
   const [activeAttempt, setActiveAttempt] = useState<any | null>(null)
 
+  const [resolvedSubjectId, setResolvedSubjectId] = useState<string | null>(null)
+  const effectiveSubjectId =
+  profile?.role === "student"
+    ? resolvedSubjectId
+    : subjectId
 
-  const [modules, setModules] = useState<any[]>([])
-  const [lessons, setLessons] = useState<any[]>([])
-  const [activeLesson, setActiveLesson] = useState<any | null>(null)
+  function parseSchema(surveySchema: any) {
+    if (!surveySchema?.pages?.[0]?.elements) {
+      return { questions: [] }
+    }
 
-  useEffect(() => {
-  async function fetchStructure() {
-    if (!hasContent) return
+    const elements = surveySchema.pages[0].elements
+    const questions: any[] = []
+    let imageUrl: string | null = null
 
-    const { data: moduleData } = await supabase
-      .from("subject_modules")
-      .select("*")
-      .eq("subject_id", subjectId)
-      .eq("grade_level", `Grade ${selectedGrade}`)
-      .order("order_index")
+    elements.forEach((el: any) => {
+      if (el.type === "html" && el.html?.includes("<img")) {
+        const match = el.html.match(/src="([^"]+)"/)
+        imageUrl = match ? match[1] : null
+      } else if (el.type === "radiogroup") {
+        questions.push({
+          id: el.name,
+          type: "multiple_choice",
+          prompt: el.title || "",
+          options: el.choices || [],
+          correct: el.correctAnswer || "",
+          points: 1,
+          image: imageUrl,
+        })
+        imageUrl = null
+      }
+    })
 
-    const { data: lessonData } = await supabase
-      .from("subject_lessons")
-      .select("*")
-      .eq("subject_id", subjectId)
-      .eq("grade_level", `Grade ${selectedGrade}`)
-      .order("order_index")
-
-    setModules(moduleData ?? [])
-    setLessons(lessonData ?? [])
-    setActiveLesson(null)
+    return { questions }
   }
-
-  fetchStructure()
-}, [subjectId, selectedGrade, hasContent])
 
   useEffect(() => {
     if (selectedAssessment) {
@@ -80,7 +86,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
    
     setRefreshAssessments((v) => v + 1)
   }, [selectedGrade, subjectId])
- 
+  
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
@@ -97,6 +103,7 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
           .eq("id", session.user.id)
           .single();
         if (error) throw error;
+        console.log("profile data:", profile);
         setProfile(profileData);
 
         if (profileData.role === "teacher") {
@@ -110,37 +117,62 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
 
           if (contentData) setHasContent(true);
         } else {
-          const subjectForMatch = subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
-          const { data: matchData } = await supabase
-            .from("matches")
-            .select("tutor_id")
-            .eq("student_id", profileData.id)
-            .eq("subject", subjectForMatch)
-            .in("grade_level", [`Grade ${selectedGrade}`, selectedGrade, "unspecified"])
-            .eq("status", "active")
-            .maybeSingle();
+          const subjectForMatch =
+          subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase()
+        console.log("profile data:", profile);
+        const { data: matchData } = await supabase
+          .from("matches")
+          .select("tutor_id, grade_level")
+          .eq("student_id", profileData.id)
+          .eq("subject", subjectForMatch)
+          .in("grade_level", [`Grade ${selectedGrade}`, selectedGrade, "unspecified"])
+          .eq("status", "active")
+          .maybeSingle()
+          console.log("matchData:", matchData);
+        if (matchData) {
+          setMatchedTutorId(matchData.tutor_id)
+          if (matchData.grade_level) {
+    setSelectedGrade(
+      matchData.grade_level.replace("Grade ", "")
+    )
+  }
+          console.log("matchData:", matchData);
+          // 🔑 RESOLVE REAL SUBJECT UUID
+          const { data: subjectRow } = await supabase
+            .from("subjects")
+            .select("id")
+            .eq("tutor_id", matchData.tutor_id)
+            .eq("name", subjectForMatch)
+            .single()
 
-          if (matchData) {
-            setMatchedTutorId(matchData.tutor_id);
+          if (subjectRow) {
+            setResolvedSubjectId(subjectRow.id)
+const grade = matchData.grade_level ?? `Grade ${selectedGrade}`
 
-            const { data: contentData } = await supabase
-              .from("subject_content")
-              .select("*")
-              .eq("tutor_id", matchData.tutor_id)
-              .eq("subject_id", subjectId)
-              .eq("grade_level", `Grade ${selectedGrade}`)
-              .maybeSingle();
+const { data: contentData } = await supabase
+  .from("subject_content")
+  .select("*")
+  .eq("tutor_id", matchData.tutor_id)
+  .eq("subject_id", subjectRow.id)
+  .in("grade_level", [
+    grade,
+    grade.replace("Grade ", ""),
+    "unspecified",
+  ])
+  .maybeSingle()
 
-            if (contentData) setHasContent(true);
+
+            if (contentData) setHasContent(true)
           }
         }
+      }
       } catch (err) {
         console.error("Error loading profile:", err);
       } finally {
         setLoading(false);
       }
     }
-
+    
     fetchProfile();
   }, [subject, subjectId, selectedGrade]);
 
@@ -312,38 +344,52 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
               <SubjectEditor
                   subjectName={subject}
                   gradeLevel={`Grade ${selectedGrade}`}
-                  tutorId={profile.id} lessonId={""}              />
+                  tutorId={profile.id}             />
             </div>
           </div>
         )}
-        {/* Subject Viwer */}
-        {profile.role === "student" && hasContent && (
-          <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-            <div className="p-6">
-              <SubjectViewer
-                  subjectId={subjectId}
-                  gradeLevel={`Grade ${selectedGrade}`}
-                               />
-            </div>
-          </div>
-        )}
+        {/* Subject Viewer */}
+{profile.role === "student" && matchedTutorId && resolvedSubjectId && (
+  <>
+    {console.log("CoursePage student‑branch:", {
+      matchedTutorId,
+      resolvedSubjectId,
+      selectedGrade,
+    })}
+    <div className="bg-white …">
+      <div className="p-6">
+        <SubjectViewer
+          subjectId={resolvedSubjectId}
+          gradeLevel={`Grade ${selectedGrade}`}
+          tutorId={matchedTutorId}
+        />
+      </div>
+    </div>
+  </>
+)}
       </div>
     )}
 
     {/*  ASSESSMENTS TAB */}
-    {activeTab === "assessments" && (
+    {activeTab === "assessments" && effectiveSubjectId && (
+
       <div key={refreshAssessments}
             className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 lg:col-span-1">
           <h2 className="text-lg font-semibold text-black mb-3">Assessments</h2>
 
           <AssessmentList
-            subjectId={subjectId}
-            tutorId={profile.role === "teacher" ? profile.id : undefined}
-            gradeLevel={`Grade ${selectedGrade}`}
-            onSelect={setSelectedAssessment}
-            refreshKey={refreshAssessments}
-          />
+  subjectId={effectiveSubjectId!}
+  tutorId={
+    profile.role === "teacher"
+      ? profile.id
+      : matchedTutorId ?? undefined
+  }
+  gradeLevel={`Grade ${selectedGrade}`}
+  onSelect={setSelectedAssessment}
+  refreshKey={refreshAssessments}
+/>
+
         </div>
         
         <div className="lg:col-span-2">
@@ -464,29 +510,29 @@ export default function CoursePage({ subject, subjectId }: CoursePageProps) {
               </div>
 
               <AssessmentBuilder
-                key={selectedAssessment.id}
-                tutorId={profile.id}
-                assessmentId={selectedAssessment.id}
-                initialSchema={selectedAssessment.survey_schema}
-                onSave={async (survey_schema) => {
-                  const { data, error } = await supabase
-                    .from("assessments")
-                    .update({ survey_schema })
-                    .eq("id", selectedAssessment.id)
-                    .select()
-                    .single()
+  key={selectedAssessment.id}
+  tutorId={profile.id}
+  assessmentId={selectedAssessment.id}
+  initialSchema={parseSchema(selectedAssessment.survey_schema)}  // ✅ Parse it first
+  onSave={async (survey_schema) => {
+    const { data, error } = await supabase
+      .from("assessments")
+      .update({ survey_schema })
+      .eq("id", selectedAssessment.id)
+      .select()
+      .single()
 
-                  if (error) {
-                    console.error(error)
-                    alert("Failed to save assessment")
-                    return
-                  }
+    if (error) {
+      console.error(error)
+      alert("Failed to save assessment")
+      return
+    }
 
-                  setSelectedAssessment(data)
-                  setRefreshAssessments((v) => v + 1)
-                  alert("Assessment saved")
-                }}
-              />
+    setSelectedAssessment(data)
+    setRefreshAssessments((v) => v + 1)
+    alert("Assessment saved")
+  }}
+/>
 
               <button
                 onClick={() =>

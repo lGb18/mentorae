@@ -59,7 +59,7 @@ export function LessonProgressViewer({
   if (lessons.length === 0) {
     return (
       <p className="text-xs text-gray-500">
-        No lessons found for this subject.
+        Please add new lessons.
       </p>
     )
   }
