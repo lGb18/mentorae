@@ -39,15 +39,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         .eq("student_confirmed", true)
         .eq("tutor_confirmed", true)
         .limit(1)
-        .single();
 
-      if (!match?.tutor_id) return;
-
+      
+      if (!match || match.length === 0) {
+    
+        setSubjects([])
+        return
+      }
+    const tutorId = match[0].tutor_id
       // 2. Fetch subjects taught by the matched tutor
       const { data: subjectsData } = await supabase
         .from("subjects")
         .select("id, name")
-        .eq("tutor_id", match.tutor_id);
+        .eq("tutor_id", tutorId);
 
       setSubjects(subjectsData || []);
     }

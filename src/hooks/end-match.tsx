@@ -8,6 +8,8 @@ export async function endMatch(matchId: string, studentId: string, subjectId: st
     .eq("student_id", studentId)
     .eq("subject_id", subjectId)
     .eq("grade_level", gradeLevel)
+    .gt("expires_at", new Date().toISOString())
+
     .maybeSingle()
 
   if (extension) {

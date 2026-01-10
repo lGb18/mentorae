@@ -39,7 +39,6 @@ export default function SubjectViewer({
       const raw = data?.content
 
       if (typeof raw === "string") {
-        // backward compatibility (old rows)
         setHtml(raw)
       } else if (raw?.html) {
         setHtml(raw.html)

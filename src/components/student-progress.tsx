@@ -34,6 +34,26 @@ export function TutorStudentProgressPage() {
   const [student, setStudent] = useState<StudentProfile | null>(null)
   const [subjects, setSubjects] = useState<SubjectRow[]>([])
   const [loading, setLoading] = useState(true)
+  async function handleEndMatch() {
+      if (!studentId) return
+      if (hasActiveExtension) return
+
+      const { error } = await supabase
+        .from("matches")
+        .update({ status: "completed" })
+        .eq("student_id", studentId)
+        .eq("grade_level", gradeLevel)
+        .eq("status", "active")
+
+      if (error) {
+        console.error(error)
+        alert("Failed to end match")
+        return
+      }
+
+      alert("Match ended successfully")
+      navigate("/tutor/progress")
+    }
 
   if (!studentId || !gradeLevel) {
     return (
@@ -56,6 +76,8 @@ export function TutorStudentProgressPage() {
         .select("id")
         .eq("student_id", studentId)
         .eq("grade_level", gradeLevel)
+        .gt("expires_at", new Date().toISOString())
+
         .maybeSingle()
 
       setHasActiveExtension(!!extension)
@@ -135,6 +157,7 @@ export function TutorStudentProgressPage() {
         </div>
       </div>
     )
+    
   }
 
   return (
@@ -160,7 +183,7 @@ export function TutorStudentProgressPage() {
 
           <section className="flex flex-wrap items-center gap-3">
             <button
-              onClick={endMatch}
+              onClick={handleEndMatch}
               disabled={hasActiveExtension}
               className={`px-4 py-2 rounded-full text-sm font-semibold border ${
                 hasActiveExtension
@@ -172,7 +195,7 @@ export function TutorStudentProgressPage() {
             </button>
             {hasActiveExtension && (
               <span className="text-xs text-amber-400">
-                Match cannot be ended while an extension is active.
+                An extension is currently active.
               </span>
             )}
           </section>
