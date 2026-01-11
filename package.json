@@ -102,9 +102,6 @@
         "dmg",
         "zip"
       ],
-      "arch": [
-        "x64"
-      ],
       "minimumSystemVersion": "10.13.6",
       "forceCodeSigning": false,
       "category": "public.app-category.education"

@@ -37,6 +37,7 @@ jobs:
       - name: Package Electron App
         run: |
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            # Build Intel (x64) for High Sierra
             npx electron-builder \
               --mac \
               --publish never \
