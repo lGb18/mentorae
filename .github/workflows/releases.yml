@@ -23,11 +23,13 @@ jobs:
       - run: npm install
 
       - name: Build Renderer & Main
-        run: npm run build
         env:
-        VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL:  ${{ fromJson(secrets.MENTORAE_ENV).SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ fromJson(secrets.MENTORAE_ENV).SUPABASE_ANON_KEY }}
+    
+        run: npm run build
         
+
       - name: Package for macOS
         if: matrix.os == 'macos-latest'
         run: |
