@@ -27,38 +27,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<"teacher" | "student" | null>(null)
   useEffect(() => {
-    if (!userId || role !== "student") return;
+  if (!userId || role !== "student") return;
 
-    async function fetchTutorSubjects() {
-      // 1. Find the student's active match
-      const { data: match } = await supabase
-        .from("matches")
-        .select("tutor_id")
-        .eq("student_id", userId)
-        .eq("status", "active")
-        .eq("student_confirmed", true)
-        .eq("tutor_confirmed", true)
-        .limit(1)
+  async function fetchTutorSubjects() {
+    // 1. Find the student's active matches
+    const { data: matches } = await supabase
+      .from("matches")
+      .select("tutor_id, subject")
+      .eq("student_id", userId)
+      .eq("status", "active")
+      .eq("student_confirmed", true)
+      .eq("tutor_confirmed", true);
 
-      
-      if (!match || match.length === 0) {
-    
-        setSubjects([])
-        return
-      }
-    const tutorId = match[0].tutor_id
-      // 2. Fetch subjects taught by the matched tutor
-      const { data: subjectsData } = await supabase
-        .from("subjects")
-        .select("id, name")
-        .eq("tutor_id", tutorId);
-
-      setSubjects(subjectsData || []);
+    if (!matches || matches.length === 0) {
+      setSubjects([]);
+      return;
     }
 
-    fetchTutorSubjects();
-  }, [userId, role]);
+    const subjectNames = matches.map((m) => m.subject);
+    const tutorIds = matches.map((m) => m.tutor_id);
 
+    const { data: subjectsData } = await supabase
+      .from("subjects")
+      .select("id, name")
+      .in("name", subjectNames)
+      .in("tutor_id", tutorIds);
+    setSubjects(subjectsData || []);
+  }
+
+  fetchTutorSubjects();
+}, [userId, role]);
+
+  
   useEffect(() => {
   async function fetchUser() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -131,7 +131,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           })),
         ]
       : [
-          // Student sees subjects from matched tutor
           ...subjects.map((s) => ({
             title: s.name,
             url: `/courses/${s.name}/${s.id}`,
@@ -164,10 +163,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error("Error signing out:", error.message);
-    else window.location.href = "/";
-  };
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error("Error signing out:", error.message);
+    return;
+  }
+
+   if (typeof window !== "undefined" && window.location) {
+    window.location.assign("/");
+  }
+};
+
 
   return (
     <Sidebar {...props} className="bg-white border-r border-gray-200">

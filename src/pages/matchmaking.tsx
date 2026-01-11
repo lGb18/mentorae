@@ -193,7 +193,6 @@ export default function Matchmaking() {
       supabase.removeChannel(channel)
     }
   }, [match?.id])
-  // 🔁 AUTO-REDIRECT WHEN CONFIRMED
   useEffect(() => {
     if (isConfirmed && match) {
       const timer = setTimeout(() => {

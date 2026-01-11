@@ -21,7 +21,7 @@ export function TutorProgressDashboard() {
   const [loading, setLoading] = useState(true)
   const [tutorName, setTutorName] = useState("")
 
-  const MAX_VIEWS = 10
+  const MAX_VIEWS = 20
   const Progress = ({ value, className }: { value?: number; className?: string }) => {
   const percentage = value ?? 0;
   return (
