@@ -21,9 +21,7 @@
     "build:main": "vite build --mode=production",
     "build": "tsc && npm run build:main && npm run build:renderer",
     "build:electron": "npm run build && electron-builder --publish never",
-    "build:electron-builder": "electron-builder",
     "preview": "vite preview",
-    "pretest": "vite build --mode=test",
     "test": "vitest run",
     "dist": "npm run build:electron-builder"
   },
@@ -100,12 +98,16 @@
       "buildResources": "assets"
     },
     "mac": {
-      "forceCodeSigning": false,
-      "category": "public.app-category.education",
       "target": [
         "dmg",
         "zip"
-      ]
+      ],
+      "arch": [
+        "x64"
+      ],
+      "minimumSystemVersion": "10.13.6",
+      "forceCodeSigning": false,
+      "category": "public.app-category.education"
     },
     "linux": {
       "target": [
