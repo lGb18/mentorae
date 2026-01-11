@@ -24,8 +24,8 @@ jobs:
 
       - name: Build Renderer & Main
         env:
-          VITE_SUPABASE_URL:  ${{ fromJson(secrets.MENTORAE_ENV).SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ fromJson(secrets.MENTORAE_ENV).SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     
         run: npm run build
         
