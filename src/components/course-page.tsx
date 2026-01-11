@@ -9,7 +9,7 @@ import { AssessmentBuilder } from "@/components/assessment/assess-builder"
 import { AssessmentRunner } from "@/components/assessment/assess-runner"
 import { Survey } from "survey-react";
 import { SendClassReminderButton } from "./notifications/reminder-button";
-
+import { StudentAssessmentAttemptBlock } from "@/components/assessment/student-attempt"
 type Profile = {
   id: string;
   email: string;
@@ -267,7 +267,7 @@ const { data: contentData } = await supabase
         </button>
       </div>
     </div>
-
+          
     {/*CONTENT TAB */}
     {activeTab === "content" && (
       <div className="space-y-6">
@@ -371,56 +371,80 @@ const { data: contentData } = await supabase
     )}
 
     {/*  ASSESSMENTS TAB */}
-    {activeTab === "assessments" && effectiveSubjectId && (
+{profile.role === "student" && selectedAssessment ? (
+  <div className="max-w-3xl mx-auto p-6">
+    <div className="flex items-center justify-between mb-4">
+  <h2 className="text-xl font-semibold text-black">
+    {selectedAssessment.title}
+  </h2>
 
-      <div key={refreshAssessments}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <button
+    onClick={() => setSelectedAssessment(null)}
+    className="text-sm px-3 py-1 rounded border bg-gray-100 hover:bg-gray-200"
+  >
+    ← Back to Assessments
+  </button>
+</div>
+
+    <StudentAssessmentAttemptBlock
+      assessment={selectedAssessment}
+      studentId={profile.id}
+    />
+  </div>
+) : (
+  <>
+    {activeTab === "assessments" && effectiveSubjectId && (
+      <div
+        key={refreshAssessments}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+      >
         <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 lg:col-span-1">
           <h2 className="text-lg font-semibold text-black mb-3">Assessments</h2>
 
           <AssessmentList
-  subjectId={effectiveSubjectId!}
-  tutorId={
-    profile.role === "teacher"
-      ? profile.id
-      : matchedTutorId ?? undefined
-  }
-  gradeLevel={`Grade ${selectedGrade}`}
-  onSelect={setSelectedAssessment}
-  refreshKey={refreshAssessments}
-/>
-
+            subjectId={effectiveSubjectId!}
+            tutorId={
+              profile.role === "teacher"
+                ? profile.id
+                : matchedTutorId ?? undefined
+            }
+            gradeLevel={`Grade ${selectedGrade}`}
+            onSelect={setSelectedAssessment}
+            refreshKey={refreshAssessments}
+          />
         </div>
-        
+
         <div className="lg:col-span-2">
           {selectedAssessment && profile.role === "teacher" && (
             <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
               <h2 className="text-lg font-semibold text-black mb-3">
                 Edit Assessment
               </h2>
+
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={async () => {
-                  if (title === selectedAssessment.title) return
-                  setSavingTitle(true)
+                  if (title === selectedAssessment.title) return;
+                  setSavingTitle(true);
 
                   const { data, error } = await supabase
                     .from("assessments")
                     .update({ title })
                     .eq("id", selectedAssessment.id)
                     .select()
-                    .single()
+                    .single();
 
-                  setSavingTitle(false)
+                  setSavingTitle(false);
 
                   if (!error) {
-                    setSelectedAssessment(data)
-                    setRefreshAssessments((v) => v + 1)
+                    setSelectedAssessment(data);
+                    setRefreshAssessments((v) => v + 1);
                   }
                 }}
                 className="text-lg font-semibold border rounded px-2 py-1 w-full"
               />
+
               <p className="text-xs text-gray-500 mb-2">
                 {selectedAssessment.grade_level}
               </p>
@@ -440,31 +464,40 @@ const { data: contentData } = await supabase
                     onClick={async () => {
                       const { error } = await supabase
                         .from("assessments")
-                        .update({ is_published: !selectedAssessment.is_published })
-                        .eq("id", selectedAssessment.id)
+                        .update({
+                          is_published: !selectedAssessment.is_published,
+                        })
+                        .eq("id", selectedAssessment.id);
 
                       if (!error) {
-                        setSelectedAssessment(null)
-                        setRefreshAssessments((v) => v + 1)
+                        setSelectedAssessment(null);
+                        setRefreshAssessments((v) => v + 1);
                       }
                     }}
                     className="text-sm px-3 py-1 rounded border"
                   >
-                    {selectedAssessment.is_published ? "Unpublish" : "Publish"}
+                    {selectedAssessment.is_published
+                      ? "Unpublish"
+                      : "Publish"}
                   </button>
 
                   <button
                     onClick={async () => {
-                      if (!confirm("Delete this assessment? This cannot be undone.")) return
+                      if (
+                        !confirm(
+                          "Delete this assessment? This cannot be undone."
+                        )
+                      )
+                        return;
 
                       const { error } = await supabase
                         .from("assessments")
                         .delete()
-                        .eq("id", selectedAssessment.id)
+                        .eq("id", selectedAssessment.id);
 
                       if (!error) {
-                        setSelectedAssessment(null)
-                        setRefreshAssessments((v) => v + 1)
+                        setSelectedAssessment(null);
+                        setRefreshAssessments((v) => v + 1);
                       }
                     }}
                     className="text-sm text-red-600 hover:text-red-800 border px-3 py-1 rounded"
@@ -486,53 +519,51 @@ const { data: contentData } = await supabase
                   value={selectedAssessment.attempt_limit ?? ""}
                   onChange={async (e) => {
                     const value =
-                      e.target.value === ""
-                        ? null
-                        : Number(e.target.value)
+                      e.target.value === "" ? null : Number(e.target.value);
 
                     const { data, error } = await supabase
                       .from("assessments")
                       .update({ attempt_limit: value })
                       .eq("id", selectedAssessment.id)
                       .select()
-                      .single()
+                      .single();
 
                     if (!error) {
-                      setSelectedAssessment(data)
+                      setSelectedAssessment(data);
                     }
                   }}
                   className="w-24 border rounded px-2 py-1 text-sm"
                 />
-                
+
                 <span className="text-xs text-gray-500">
                   Leave empty for unlimited
                 </span>
               </div>
 
               <AssessmentBuilder
-  key={selectedAssessment.id}
-  tutorId={profile.id}
-  assessmentId={selectedAssessment.id}
-  initialSchema={parseSchema(selectedAssessment.survey_schema)}  // ✅ Parse it first
-  onSave={async (survey_schema) => {
-    const { data, error } = await supabase
-      .from("assessments")
-      .update({ survey_schema })
-      .eq("id", selectedAssessment.id)
-      .select()
-      .single()
+                key={selectedAssessment.id}
+                tutorId={profile.id}
+                assessmentId={selectedAssessment.id}
+                initialSchema={parseSchema(selectedAssessment.survey_schema)}
+                onSave={async (survey_schema) => {
+                  const { data, error } = await supabase
+                    .from("assessments")
+                    .update({ survey_schema })
+                    .eq("id", selectedAssessment.id)
+                    .select()
+                    .single();
 
-    if (error) {
-      console.error(error)
-      alert("Failed to save assessment")
-      return
-    }
+                  if (error) {
+                    console.error(error);
+                    alert("Failed to save assessment");
+                    return;
+                  }
 
-    setSelectedAssessment(data)
-    setRefreshAssessments((v) => v + 1)
-    alert("Assessment saved")
-  }}
-/>
+                  setSelectedAssessment(data);
+                  setRefreshAssessments((v) => v + 1);
+                  alert("Assessment saved");
+                }}
+              />
 
               <button
                 onClick={() =>
@@ -544,25 +575,12 @@ const { data: contentData } = await supabase
               </button>
             </div>
           )}
-
-          {selectedAssessment && profile.role === "student" && (
-            <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-semibold text-black mb-3">
-                {selectedAssessment.title}
-              </h2>
-              
-              <AssessmentRunner
-                assessmentId={selectedAssessment.id}
-                studentId={profile.id}
-                schema={selectedAssessment.survey_schema}
-                passingScore={selectedAssessment.passing_score}
-              />
-            </div>
-          )}
         </div>
       </div>
     )}
-  </div>
-)
-
+  </>
+  
+  )
 }
+</div>
+)}

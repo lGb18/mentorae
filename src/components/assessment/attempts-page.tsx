@@ -5,13 +5,18 @@ import { AssessmentAttemptsPanel } from "@/components/assessment/attempts-panel"
 import { AssessmentRunner } from "./assess-runner"
 
 export function AssessmentAttemptsPage() {
+  
   const { assessmentId } = useParams()
   const [assessment, setAssessment] = useState<any | null>(null)
   const [profile, setProfile] = useState<any | null>(null)
   const [attempts, setAttempts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  console.log("✅ AssessmentAttemptsPage MOUNTED")
 
+
+  console.log("🧪 assessmentId param", assessmentId)
   useEffect(() => {
+    if (!assessmentId) return
     async function load() {
       const {
         data: { user },
@@ -22,7 +27,7 @@ export function AssessmentAttemptsPage() {
         return
       }
 
-      const [{ data: assessmentData }, { data: profileData }] =
+      const [{ data: assessmentData }, { data: profileData }, { data: attemptsData }] =
         await Promise.all([
           supabase
             .from("assessments")
@@ -35,15 +40,31 @@ export function AssessmentAttemptsPage() {
             .select("id, role")
             .eq("id", user.id)
             .single(),
+
+          supabase
+            .from("assessment_attempts")
+            .select("id, student_id")
+            .eq("assessment_id", assessmentId),
         ])
 
       setAssessment(assessmentData)
       setProfile(profileData)
+      setAttempts(attemptsData ?? [])
       setLoading(false)
+      console.log("🔎 AssessmentAttemptsPage render", {
+        assessmentId,
+        type: typeof assessmentId,
+      })
     }
 
     load()
   }, [assessmentId])
+  console.log("🧮 Attempt calculation", {
+  role: profile?.role,
+  totalAttemptsLoaded: attempts.length,
+  studentAttempts: attempts.filter(a => a.student_id === profile?.id).length,
+  attemptLimit: assessment?.attempt_limit,
+})
 
   if (loading) {
     return <p className="text-sm text-gray-500">Loading assessment…</p>
@@ -87,7 +108,6 @@ export function AssessmentAttemptsPage() {
         schema={assessment.survey_schema}
         role={profile.role}
         studentId={profile.role === "student" ? profile.id : undefined}
-        onLoaded={setAttempts}
       />
     </div>
   )

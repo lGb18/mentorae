@@ -14,6 +14,7 @@ type StudentRow = {
   subject_name: string
   grade_level: string
 }
+
 export function TutorProgressDashboard() {
   const [students, setStudents] = useState<StudentRow[]>([])
   const [progress, setProgress] = useState<Record<string, number>>({})
@@ -21,7 +22,17 @@ export function TutorProgressDashboard() {
   const [tutorName, setTutorName] = useState("")
 
   const MAX_VIEWS = 10
-
+  const Progress = ({ value, className }: { value?: number; className?: string }) => {
+  const percentage = value ?? 0;
+  return (
+    <div className={`relative h-4 rounded-full bg-gray-200 overflow-hidden ${className || ""}`}>
+      <div
+        className="h-full bg-black transition-all duration-100 ease-out" 
+        style={{ width: `${Math.min(percentage, 100)}%` }}
+      ></div>
+    </div>
+  );
+};
   useEffect(() => {
     async function load() {
       setLoading(true)
@@ -45,12 +56,14 @@ export function TutorProgressDashboard() {
 
       const { data: matches, error } = await supabase
         .from("matches")
-        .select(`
+        .select(
+          `
           student_id,
           grade_level,
           subject,
           profiles!matches_student_id_fkey (display_name)
-        `)
+        `
+        )
         .eq("tutor_id", user.id)
         .eq("status", "active")
 
@@ -81,7 +94,6 @@ export function TutorProgressDashboard() {
 
       setStudents(rows)
 
-      // 4️⃣ Compute progress (ENGAGEMENT + ASSESSMENT)
       const progressMap: Record<string, number> = {}
 
       for (const s of rows) {
@@ -97,10 +109,12 @@ export function TutorProgressDashboard() {
 
         const { data: attempts } = await supabase
           .from("assessment_attempts")
-          .select(`
+          .select(
+            `
             percentage,
             assessments!inner(subject_id)
-          `)
+          `
+          )
           .eq("student_id", s.student_id)
           .eq("assessments.subject_id", s.subject_id)
 
@@ -122,107 +136,137 @@ export function TutorProgressDashboard() {
 
   if (loading) {
     return (
-      <div className="p-6 text-sm text-gray-500">
-        Loading student progress…
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="border border-gray-200 rounded-lg p-8 bg-white text-center">
+          <div className="inline-block h-5 w-5 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin mb-3" />
+          <p className="text-sm text-gray-500">Loading student progress…</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Student Progress Dashboard</h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto py-10 px-4 space-y-6">
+        <header className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-gray-900">
+            Student Progress
+          </h1>
+          <p className="text-sm text-gray-500">{students.length} students</p>
+        </header>
 
-      <div className="space-y-4">
-        {students.length === 0 && (
-          <Card className="border-dashed border-2 border-muted-foreground p-8 text-center">
-            <CardContent className="space-y-4">
-              <p className="text-sm font-medium text-foreground">
+        {students.length === 0 ? (
+          <div className="border border-dashed border-gray-300 rounded-lg p-10 bg-white text-center space-y-4">
+            <div className="text-gray-300 text-4xl">📊</div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">
                 No student progress yet
               </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Progress will appear here once:
+              <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                Progress will appear here once a student is matched to you,
                 <br />
-                • A student is matched to you
-                <br />
-                • They view their subject
-                <br />
-                • Or attempt assessments
+                views their subject, or attempts assessments.
               </p>
+            </div>
 
-              <div className="flex flex-wrap justify-center gap-3 pt-2">
-                <NavLink to="/matchmaking">
-                  <Button variant="outline" size="sm">
-                    Find Students
-                  </Button>
-                </NavLink>
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
+              <NavLink to="/matchmaking">
+                <button className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
+                  Find Students
+                </button>
+              </NavLink>
 
-                <NavLink to="/create-subject">
-                  <Button variant="outline" size="sm">
-                    Manage Courses
-                  </Button>
-                </NavLink>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              <NavLink to="/create-subject">
+                <button className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition">
+                  Manage Courses
+                </button>
+              </NavLink>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {students.map((s) => {
+              const key = `${s.student_id}:${s.subject_id}`
+              const pct = progress[key] ?? 0
+              const lowProgress = pct < 60
 
-        {students.map((s) => {
-          const key = `${s.student_id}:${s.subject_id}`
-          const pct = progress[key] ?? 0
-          const lowProgress = pct < 60
-
-          return (
-            <Card key={key}>
-              <CardHeader className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                <CardTitle className="text-sm sm:text-base">
-                  {s.display_name} — {s.subject_name}
-                </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1 sm:mt-0">
-                  Grade {s.grade_level}
-                </p>
-              </CardHeader>
-
-              <CardContent className="space-y-2">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Progress</span>
-                  <span>{pct}%</span>
-                </div>
-
-                <Progress
-                  percent={Math.min(pct, 100)}
-                 
-                />
-
-                {lowProgress && (
-                  <p className="text-xs text-destructive">Needs attention</p>
-                )}
-
-                <NavLink
-                  to={`/tutor/progress/${s.student_id}/${s.grade_level}`}
-                  className="text-xs text-primary hover:underline"
+              return (
+                <div
+                  key={key}
+                  className="bg-white border border-gray-200 rounded-lg p-5 space-y-4"
                 >
-                  View details →
-                </NavLink>
+                  {/* Header */}
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600">
+                        {s.display_name?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {s.display_name}
+                        </p>
+                        <p className="text-xs text-gray-500">{s.subject_name}</p>
+                      </div>
+                    </div>
 
-                {lowProgress && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <NotifyStudentButton
-                      studentId={s.student_id}
-                      subjectName={s.subject_name}
-                      gradeLevel={s.grade_level}
-                    />
-
-                    <TriggerExtensionButton
-                      studentId={s.student_id}
-                      subjectId={s.subject_id}
-                      gradeLevel={s.grade_level}
-                    />
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md w-fit">
+                      Grade {s.grade_level}
+                    </span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          )
-        })}
+
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500">Progress</span>
+                      <span
+                        className={`font-medium ${
+                          lowProgress ? "text-gray-500" : "text-gray-900"
+                        }`}
+                      >
+                        {pct}%
+                      </span>
+                    </div>
+
+                    <Progress value={Math.min(pct, 100)} />
+
+                    {lowProgress && (
+                      <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                        Needs attention
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-gray-100">
+                    <NavLink
+                      to={`/tutor/progress/${s.student_id}/${s.grade_level}`}
+                      className="text-sm text-gray-600 hover:text-gray-900 underline underline-offset-2 transition"
+                    >
+                      View details
+                    </NavLink>
+
+                    {lowProgress && (
+                      <>
+                        <NotifyStudentButton
+                          studentId={s.student_id}
+                          subjectName={s.subject_name}
+                          gradeLevel={s.grade_level}
+                        />
+
+                        <TriggerExtensionButton
+                          studentId={s.student_id}
+                          subjectId={s.subject_id}
+                          gradeLevel={s.grade_level}
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

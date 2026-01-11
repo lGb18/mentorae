@@ -65,7 +65,6 @@ export default function SubjectViewer({
     await supabase.from("subject_views").insert({
       student_id: user.id,
       subject_id: subjectId,
-      tutor_id: tutorId,
     })
   }
 
