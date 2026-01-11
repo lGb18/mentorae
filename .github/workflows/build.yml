@@ -48,7 +48,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os == 'macos-latest' && 'release_high_sierra_mac' || 'release_on_' + matrix.os }}
+          name: ${{ matrix.os == 'macos-latest' && 'release_high_sierra_mac' || format('release_on_{0}', matrix.os) }}
           path: |
             release/*.exe
             release/*.dmg
@@ -57,3 +57,4 @@ jobs:
             release/*.zip
             !release/*-unpacked/
           retention-days: 5
+
