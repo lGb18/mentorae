@@ -43,7 +43,6 @@ Please make sure you're ready for the session.
 if (error) {
   console.error("Edge Function error:", error)
 
-  // 🔥 THIS is where your real JSON error lives
   const res = error.context
   if (res) {
     const text = await res.text()
