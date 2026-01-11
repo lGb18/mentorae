@@ -13,9 +13,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    env:
-      VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +24,10 @@ jobs:
 
       - name: Build Renderer & Main
         run: npm run build
-
+        env:
+        VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        
       - name: Package for macOS
         if: matrix.os == 'macos-latest'
         run: |
